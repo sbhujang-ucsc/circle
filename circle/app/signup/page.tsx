@@ -1,16 +1,16 @@
 // app/signup/page.tsx
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
   const router = useRouter();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSignup = async () => {
     const { error } = await supabase.auth.signUp({
@@ -19,8 +19,10 @@ const SignupPage = () => {
     });
     if (error) alert(error.message);
     else {
-      alert('Signup successful! Please check your email to confirm your account.');
-      router.push('/login');
+      alert(
+        "Signup successful! Please check your email to confirm your account."
+      );
+      router.push("/login");
     }
   };
 
@@ -32,13 +34,15 @@ const SignupPage = () => {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-      /><br/>
+      />
+      <br />
       <input
         type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-      /><br/>
+      />
+      <br />
       <button onClick={handleSignup}>Signup</button>
     </div>
   );

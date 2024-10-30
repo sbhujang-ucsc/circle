@@ -1,11 +1,12 @@
 // app/login/page.tsx
+
 "use client";
 
 import { useState, useContext } from "react";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../providers/AuthProvider";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 const LoginPage = () => {
   const { user } = useContext(AuthContext);
@@ -18,28 +19,18 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (error) alert(error.message);
+    else router.push("/");
+  };
 
-    if (error) {
-      setModalMessage(error.message);
-      setIsModalOpen(true);
-    } else {
-      router.push("/");
-    }
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -62,7 +53,7 @@ const LoginPage = () => {
             <input
               type="email"
               id="email"
-              placeholder="Email"
+              placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
@@ -71,8 +62,8 @@ const LoginPage = () => {
           <div className="relative mb-6">
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
               id="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 pr-10 rounded-lg"
@@ -123,11 +114,11 @@ const LoginPage = () => {
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 bg-purple-900 bg-opacity-50"></div>
-        <div className="absolute top-8 left-8">
+        <div className="absolute top-8 left-8">||||||</div>
+        <div className="absolute top-8 right-8">
           <h1 className="text-3xl font-bold">Circle</h1>
         </div>
-        <div className="absolute top-8 right-8">||||||</div>
-        <div className="absolute bottom-16 left-8 right-8">
+        <div className="absolute bottom-16 right-8">
           <h2 className="text-4xl font-bold mb-4">
             Reconnecting Doctors & Patients
             <br />

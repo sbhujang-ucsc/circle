@@ -19,18 +19,27 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) alert(error.message);
-    else router.push("/");
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    if (error) {
+      setModalMessage(error.message);
+      setIsModalOpen(true);
+    } else {
+      router.push("/");
+    }
   };
 
   return (

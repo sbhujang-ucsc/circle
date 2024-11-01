@@ -129,7 +129,9 @@ const SignupPage = () => {
         <h2 className="text-4xl font-bold mb-2">Create an account</h2>
         <p className="mb-8 text-gray-400">
           Already have an account?{" "}
-          <a className="text-[#6082EB] hover:underline">Log in</a>
+          <a href="/login" className="text-[#6082EB] hover:underline">
+            Login
+          </a>
         </p>
         <form
           onSubmit={(e) => {

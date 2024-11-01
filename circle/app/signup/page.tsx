@@ -14,13 +14,13 @@ const SignupPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
-  const [modalMessage, setModalMessage] = useState("");  // Modal message content
+  const [modalMessage, setModalMessage] = useState(""); // Modal message content
 
-  const [emailError, setEmailError] = useState("");      // Email validation error message
+  const [emailError, setEmailError] = useState(""); // Email validation error message
   const [passwordError, setPasswordError] = useState(""); // Password validation error message
 
-   // Email validation using regex pattern for basic email structure
-   const validateEmail = (email: string) => {
+  // Email validation using regex pattern for basic email structure
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -30,13 +30,12 @@ const SignupPage = () => {
     return password.length >= 6;
   };
 
-
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);             // Close modal
+    setIsModalOpen(false); // Close modal
   };
 
   const handleSignup = async () => {
@@ -68,13 +67,13 @@ const SignupPage = () => {
       });
 
       if (error) {
-        setModalMessage(error.message);  // Set error message in the modal
-        setIsModalOpen(true);            // Show modal
+        setModalMessage(error.message); // Set error message in the modal
+        setIsModalOpen(true); // Show modal
       } else {
         setModalMessage(
           "Signup successful! Please check your email to confirm your account."
         );
-        setIsModalOpen(true);            // Show success message modal
+        setIsModalOpen(true); // Show success message modal
       }
     }
   };
@@ -100,7 +99,6 @@ const SignupPage = () => {
     }
   }; */
 
-
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <div className="w-1/2 relative overflow-hidden rounded-r-3xl">
@@ -109,13 +107,11 @@ const SignupPage = () => {
           alt="Desert"
           className="object-cover w-full h-full"
         />
-        <div className="absolute inset-0 bg-purple-900 bg-opacity-50"></div>
+        <div className="absolute inset-0 bg-[#4e6dc1] bg-opacity-50"></div>
         <div className="absolute top-8 left-8">
           <h1 className="text-3xl font-bold">Circle</h1>
         </div>
-        <div className="absolute top-8 right-8">
-           ||||||
-        </div>
+        <div className="absolute top-8 right-8">||||||</div>
         <div className="absolute bottom-16 left-8 right-8">
           <h2 className="text-4xl font-bold mb-4">
             Reconnecting Doctors & Patients
@@ -133,9 +129,14 @@ const SignupPage = () => {
         <h2 className="text-4xl font-bold mb-2">Create an account</h2>
         <p className="mb-8 text-gray-400">
           Already have an account?{" "}
-          <a className="text-purple-500 hover:underline">Log in</a>
+          <a className="text-[#6082EB] hover:underline">Log in</a>
         </p>
-        <form onSubmit = {(e) => {e.preventDefault(); handleSignup();}}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSignup();
+          }}
+        >
           <div className="flex gap-4 mb-4">
             <input
               type="text"
@@ -157,7 +158,8 @@ const SignupPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
             />
-            {emailError && <p className="text-red-500 text-sm">{emailError}</p>} {/* Show email error */}
+            {emailError && <p className="text-red-500 text-sm">{emailError}</p>}{" "}
+            {/* Show email error */}
           </div>
           <div className="relative mb-6">
             <input
@@ -170,7 +172,8 @@ const SignupPage = () => {
             />
             {passwordError && (
               <p className="text-red-500 text-sm">{passwordError}</p>
-            )} {/* Show password error */}
+            )}{" "}
+            {/* Show password error */}
             <button
               type="button"
               onClick={togglePasswordVisibility}
@@ -187,7 +190,7 @@ const SignupPage = () => {
             <input type="checkbox" className="mr-2 checkbox" />
             <span>
               I agree to the{" "}
-              <a className="text-purple-500 hover:underline">
+              <a className="text-[#6082EB] hover:underline">
                 Terms & Conditions
               </a>
             </span>
@@ -195,29 +198,20 @@ const SignupPage = () => {
           <button
             type="submit"
             onClick={handleSignup}
-            className="btn bg-purple-600 text-white w-full hover:bg-purple-700 transition duration-300 rounded-lg"
+            className="btn bg-[#6082EB] text-white w-full hover:bg-[#6082EB] transition duration-300 rounded-lg"
           >
             Create account
           </button>
         </form>
         <div className="mt-8">
           <p className="text-center text-gray-400 mb-4">Or register with</p>
-          <div className="flex gap-4">
-            <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
-              <img
-                src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
-                alt="Google"
-                className="h-6"
-              />
-            </button>
-            <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
-              <img
-                src="https://www.apple.com/ac/globalnav/7/en_US/images/be15095f-5a20-57d0-ad14-cf4c638e223a/globalnav_apple_image__b5er5ngrzxqq_large.svg"
-                alt="Apple"
-                className="h-6"
-              />
-            </button>
-          </div>
+          <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
+            <img
+              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
+              alt="Google"
+              className="h-6"
+            />
+          </button>
         </div>
       </div>
       {isModalOpen && (
@@ -227,7 +221,7 @@ const SignupPage = () => {
             <p className="mb-4">{modalMessage}</p>
             <button
               onClick={closeModal}
-              className="btn bg-purple-600 text-black w-full hover:bg-purple-700 transition duration-300 rounded-lg"
+              className="btn bg-[#6082EB] text-black w-full hover:bg-[#6082EB] transition duration-300 rounded-lg"
             >
               Close
             </button>

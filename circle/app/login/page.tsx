@@ -48,7 +48,7 @@ const LoginPage = () => {
         <h2 className="text-4xl font-bold mb-2">Login to Circle</h2>
         <p className="mb-8 text-gray-400">
           Don't have an account?{" "}
-          <a href="/signup" className="text-purple-500 hover:underline">
+          <a href="/signup" className="text-[#6082EB] hover:underline">
             Sign up
           </a>
         </p>
@@ -91,29 +91,20 @@ const LoginPage = () => {
           </div>
           <button
             type="submit"
-            className="btn bg-purple-600 text-white w-full hover:bg-purple-700 transition duration-300 rounded-lg"
+            className="btn bg-[#6082EB] text-white w-full hover:bg-[#6082EB] transition duration-300 rounded-lg"
           >
             Login
           </button>
         </form>
         <div className="mt-8">
           <p className="text-center text-gray-400 mb-4">Or sign in with</p>
-          <div className="flex gap-4">
-            <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
-              <img
-                src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
-                alt="Google"
-                className="h-6"
-              />
-            </button>
-            <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
-              <img
-                src="https://www.apple.com/ac/globalnav/7/en_US/images/be15095f-5a20-57d0-ad14-cf4c638e223a/globalnav_apple_image__b5er5ngrzxqq_large.svg"
-                alt="Apple"
-                className="h-6"
-              />
-            </button>
-          </div>
+          <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
+            <img
+              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
+              alt="Google"
+              className="h-6"
+            />
+          </button>
         </div>
       </div>
       <div className="w-1/2 relative overflow-hidden rounded-l-3xl">
@@ -122,7 +113,7 @@ const LoginPage = () => {
           alt="Desert"
           className="object-cover w-full h-full"
         />
-        <div className="absolute inset-0 bg-purple-900 bg-opacity-50"></div>
+        <div className="absolute inset-0 bg-[#4e6dc1] bg-opacity-50"></div>
         <div className="absolute top-8 left-8">||||||</div>
         <div className="absolute top-8 right-8">
           <h1 className="text-3xl font-bold">Circle</h1>

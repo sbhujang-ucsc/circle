@@ -44,7 +44,7 @@ const DoctorLanding = () => {
         </button>
       </div>
       {/* Appointment Table */}
-      <div className="bg-white flex-grow px-[20px] mx-auto shadow-lg rounded-2xl">
+      <div className="bg-white flex-grow mx-auto shadow-lg rounded-2xl">
         <table className="w-full border-collapse rounded-2xl overflow-hidden">
           <thead>
             <tr className="bg-[#bac7ef] text-left mx-[-30px]">

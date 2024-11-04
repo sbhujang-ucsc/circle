@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useContext, useState } from 'react';
-import { AuthContext } from '../providers/AuthProvider';
-import { supabase } from '../lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { useContext, useState } from "react";
+import { AuthContext } from "../providers/AuthProvider";
+import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import {
   MenuIcon,
   XIcon,
   SearchIcon,
   ShoppingCartIcon,
   UserIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
 const NavBar = () => {
   const { user } = useContext(AuthContext);
@@ -21,11 +21,19 @@ const NavBar = () => {
   // Logout function
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
-    <nav className="bg-gray-900 text-white w-full">
+    <nav>
+      {/* Links to pages for css devolpment, can be removed later */}
+      <Link href="/login">Login</Link>
+      <Link href="/signup">Signup</Link>
+      <Link href="/patient">Patient</Link>
+      <Link href="/doctor">Doctor</Link>
+      <Link href="/appointment">AppointmentInfo</Link>
+    </nav>
+    /* <nav className="bg-gray-900 text-white w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -57,7 +65,6 @@ const NavBar = () => {
               <button className="p-2 rounded-lg hover:bg-gray-800">
                 <UserIcon className="h-5 w-5" />
               </button>
-              {/* Show login/signup if not logged in, else show logout */}
               {!user ? (
                 <>
                   <Link href="/login" className="hover:text-purple-500 px-3 py-2 rounded-md text-sm font-medium">Login</Link>
@@ -79,7 +86,6 @@ const NavBar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -107,7 +113,6 @@ const NavBar = () => {
               </button>
             </div>
 
-            {/* Show login/signup if not logged in, else show logout */}
             {!user ? (
               <>
                 <Link href="/login" className="hover:text-purple-500 block px-3 py-2 rounded-md text-base font-medium">Login</Link>
@@ -119,7 +124,7 @@ const NavBar = () => {
           </div>
         </div>
       )}
-    </nav>
+    </nav> */
   );
 };
 

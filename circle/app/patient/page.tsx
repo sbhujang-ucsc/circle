@@ -7,6 +7,8 @@ import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../providers/AuthProvider";
 import "./patient.css";
+import backIcon from "./back.png";
+import Image from "next/image";
 
 const PatientLanding = () => {
   const router = useRouter();
@@ -26,44 +28,58 @@ const PatientLanding = () => {
   };
 
   return (
-    <div className="bg-white p-4 text-black min-h-screen">
-      {/* Top bar */}
-      <div className="bg-[#6082EB] flex justify-between items-center rounded-lg p-4 text-[30px] font-bold font-exo">
-        <span className="text-white text-4xl font-semibold">
-          Welcome back, Example Name
-        </span>
-        <button
-          onClick={handleLogout}
-          className="bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb]"
-        >
-          Log Out
-        </button>
-      </div>
-
+    <>
       {currentPage === 1 && (
         // First Page
-        <div className="flex flex-col items-center justify-center flex-grow space-y-8 mt-16">
-          <h1 className="text-[50px] font-bold font-exo">
-            Want to make an Appointment?
-          </h1>
-          <button
-            onClick={() => handlePageChange(2)} // Navigate to the second page
-            className="border-4 border-[#6082eb] bg-[#9baee5] py-2 px-10 rounded-[40px] text-[40px] font-exo hover:scale-110 hover:bg-[#90a3da] transition-transform"
-          >
-            Get Started
-          </button>
+        <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
+          {/* Top bar */}
+          <div className="bg-[#6082EB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg p-4 text-[30px] font-bold font-exo">
+            <span className="text-white text-4xl font-semibold">
+              Welcome back, Example Name
+            </span>
+            <button
+              onClick={handleLogout}
+              className="bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb]"
+            >
+              Log Out
+            </button>
+          </div>
+          <div className="bg-white py-[150px] px-[60px] mx-auto shadow-lg rounded-2xl mt-[50px] min-h-96">
+            <div className="flex flex-col items-center justify-center flex-grow space-y-8 ">
+              <h1 className="text-[50px] font-bold font-exo">
+                Want to make an Appointment?
+              </h1>
+              <button
+                onClick={() => handlePageChange(2)} // Navigate to the second page
+                className="border-4 border-[#6082eb] bg-[#9baee5] py-2 px-10 rounded-[40px] text-[40px] font-exo hover:scale-110 hover:bg-[#90a3da] transition-transform"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {currentPage === 2 && (
         // Second Page
-        <div>
-          <button className="backbtn" onClick={() => handlePageChange(1)}>
-            Back
-          </button>
-          <div className="flex flex-col items-center justify-center space-y-5 mt-15 relative">
-            {/* Back Button */}
-
+        <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
+          {/* Top bar */}
+          <div className="bg-[#6082EB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg p-4 text-[30px] font-bold font-exo">
+            <button
+              onClick={() => handlePageChange(1)}
+              className=" text-[30px] font-bold font-exo bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb] flex items-center"
+            >
+              <Image src={backIcon} alt="Back Icon" className="h-8 w-8 mr-2" />
+              Cancel
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb]"
+            >
+              Log Out
+            </button>
+          </div>
+          <div className="flex flex-col px-10 py-10 justify-center space-y-5 mt-[20px] relative bg-white mx-[200px] shadow-lg rounded-3xl">
             <h2 className="text-[40px] font-bold font-exo">
               Fill Out the Form
             </h2>
@@ -114,18 +130,31 @@ const PatientLanding = () => {
 
       {currentPage === 3 && (
         // Third Page
-        <div>
-          <button className="backbtn" onClick={() => handlePageChange(1)}>
-            Back
-          </button>
-          <div className="flex flex-col items-center justify-center space-y-5 mt-15 relative bg1">
+        <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
+          {/* Top bar */}
+          <div className="bg-[#6082EB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg p-4 text-[30px] font-bold font-exo">
+            <button
+              onClick={() => handlePageChange(2)}
+              className=" text-[30px] font-bold font-exo bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb] flex items-center"
+            >
+              <Image src={backIcon} alt="Back Icon" className="h-8 w-8 mr-2" />
+              Back
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb]"
+            >
+              Log Out
+            </button>
+          </div>
+          <div className="flex flex-col px-10 py-10 justify-center items-center space-y-5 mt-[20px] relative bg-white mx-[200px] shadow-lg rounded-3xl">
             <h2 className="text-[40px] font-exo">
               Call this number to talk to our smart assisstant!
             </h2>
 
-            <button className="mt-4 bg-[#9baee5] border-4 border-[#6082eb] py-2 px-10 rounded-[40px] text-[30px] font-exo hover:bg-[#90a3da]">
+            <div className="mt-4 bg-[#9baee5] border-4 border-[#6082eb] py-2 px-10 rounded-[40px] text-[30px] mx-auto font-exo hover:bg-[#90a3da]">
               +1 111 - 222 - 3333
-            </button>
+            </div>
           </div>
         </div>
       )}
@@ -214,7 +243,7 @@ const PatientLanding = () => {
         </div>
       </div>
     */}
-    </div>
+    </>
   );
 };
 

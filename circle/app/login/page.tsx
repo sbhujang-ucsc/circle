@@ -7,6 +7,8 @@ import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../providers/AuthProvider";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import Image from "next/image";
+import darklogo from "../lightlogo.png";
 
 const LoginPage = () => {
   const { user } = useContext(AuthContext);
@@ -109,14 +111,18 @@ const LoginPage = () => {
       </div>
       <div className="w-1/2 relative overflow-hidden rounded-l-3xl">
         <img
-          src="https://images.unsplash.com/photo-1581594693690-517d9a71e1f2?q=80&w=3000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          src="https://as1.ftcdn.net/v2/jpg/02/25/01/90/1000_F_225019061_tRisS4zm7uoE0XmcYrmKzlh4ozD7RdfB.jpg"
           alt="Desert"
           className="object-cover w-full h-full"
         />
-        <div className="absolute inset-0 bg-[#4e6dc1] bg-opacity-50"></div>
+        <div className="absolute inset-0 bg-[#4e6dc1] bg-opacity-80"></div>
         <div className="absolute top-8 left-8">||||||</div>
-        <div className="absolute top-8 right-8">
-          <h1 className="text-3xl font-bold">Circle</h1>
+        <div className="absolute top-2 right-0">
+          <Image
+            src={darklogo}
+            alt="Back Icon"
+            className="max-h-[160px] max-w-[240px]"
+          />
         </div>
         <div className="absolute bottom-16 right-8">
           <h2 className="text-4xl font-bold mb-4">

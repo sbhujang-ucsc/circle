@@ -29,7 +29,7 @@ const DoctorLanding = () => {
   return (
     <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
       {/* Top bar */}
-      <div className="bg-[#6082EB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe] rounded-br-lg rounded-bl-lg p-4 text-[30px] font-bold font-exo">
+      <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe] rounded-br-lg rounded-bl-lg p-4 text-[30px] font-bold font-exo">
         <span className="text-white text-4xl font-semibold">
           Welcome back, Example Doctor Name
         </span>
@@ -38,7 +38,7 @@ const DoctorLanding = () => {
             await supabase.auth.signOut();
             router.push("/login");
           }}
-          className="bg-[#609ceb] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#6082eb]"
+          className="bg-[#356BBB] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#174a95]"
         >
           Log Out
         </button>

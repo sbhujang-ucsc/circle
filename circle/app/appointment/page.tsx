@@ -27,29 +27,29 @@ const Appointment = () => {
   return (
     <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
       {/* Top bar */}
-      <div className="bg-[#6082EB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg text-[30px] font-exo font-semibold">
+      <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg text-[30px] font-exo font-semibold">
         <div className="flex">
           <button
             onClick={() => setActivePage("summary")}
             className={`${
-              activePage === "summary" ? "bg-[#5272d7]" : "bg-[#6C8BE9]"
-            } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#6082eb]`}
+              activePage === "summary" ? "bg-[#174a95]" : "bg-[#356BBB]"
+            } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#174a95]`}
           >
             Summary
           </button>
           <button
             onClick={() => setActivePage("ehr")}
             className={`${
-              activePage === "ehr" ? "bg-[#5272d7]" : "bg-[#6C8BE9]"
-            } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#6082eb]`}
+              activePage === "ehr" ? "bg-[#174a95]" : "bg-[#356BBB]"
+            } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#174a95]`}
           >
             Patient EHR
           </button>
           <button
             onClick={() => setActivePage("transcript")}
             className={`${
-              activePage === "transcript" ? "bg-[#5272d7]" : "bg-[#6C8BE9]"
-            } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#6082eb]`}
+              activePage === "transcript" ? "bg-[#174a95]]" : "bg-[#356BBB]"
+            } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#174a95]`}
           >
             Transcript
           </button>
@@ -57,7 +57,7 @@ const Appointment = () => {
 
         <button
           onClick={() => router.push("/doctor")}
-          className="bg-[#6C8BE9] text-white border-2 border-white p-3 px-4 text-[30px] rounded-lg hover:bg-[#6082eb]"
+          className="bg-[#356BBB] text-white border-2 border-white p-3 px-4 text-[30px] rounded-lg hover:bg-[#174a95]"
         >
           Dashboard
         </button>

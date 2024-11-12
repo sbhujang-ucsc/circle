@@ -53,8 +53,8 @@ const DoctorLanding = () => {
               </th>
               <th className="px-4 py-2 w-[200px] text-[18px]">Date</th>
               <th className="px-4 py-2 w-[200px] text-[18px]">Time</th>
-              <th className="px-4 py-2 w-[400px] text-[18px]">Patient Name</th>
-              <th className="px-4 py-2 text-right">Details</th>
+              <th className="px-4 py-2 w-[250px] text-[18px]">Patient Name</th>
+              <th className="px-4 py-2 w-[00px] text-[18px]">Details</th>
             </tr>
           </thead>
           <tbody>
@@ -64,12 +64,12 @@ const DoctorLanding = () => {
                 <td className="px-4 py-2">{appointment.date}</td>
                 <td className="px-4 py-2">{appointment.time}</td>
                 <td className="px-4 py-2">{appointment.patient_name}</td>
-                <td className="px-4 py-2 text-right">
+                <td className="px-4 py-2 text-center">
                   <button
                     onClick={() => handleDetailsClick(appointment.patient_name)}
-                    className="bg-[#9baee5] text-white py-1 px-3 rounded-md hover:bg-[#90a3da]"
+          className="bg-[#9baee5] text-white py-2 px-5 rounded-lg hover:bg-[#90a3da] font-bold text-lg" // Adjust padding and make rounded-lg
                   >
-                    →
+                    ➔
                   </button>
                 </td>
               </tr>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface SummaryProps {
@@ -6,6 +6,12 @@ interface SummaryProps {
 }
 
 const Summary = ({ patientName }: SummaryProps) => {
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
+  const toggleChatbot = () => {
+    setIsChatbotOpen(!isChatbotOpen);
+  };
+
   return (
     <div className="flex space-x-8 w-4/5 mx-auto mt-8">
       {/* Patient Details Card */}
@@ -57,9 +63,81 @@ const Summary = ({ patientName }: SummaryProps) => {
 
         {/* Chat with AI Button */}
         <div className="flex justify-end mt-6">
-          <button className="bg-[#6082EB] text-white text-lg py-3 px-6 rounded-lg flex items-center space-x-2 shadow-lg">
+          <button onClick={toggleChatbot} className="bg-[#6082EB] text-white text-lg py-3 px-6 rounded-lg flex items-center space-x-2 shadow-lg">
             <span>💬</span>
             <span>Chat with AI</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Chatbot Modal */}
+      {isChatbotOpen && <ChatbotModal onClose={toggleChatbot} />}
+    </div>
+  );
+};
+
+interface ChatbotModalProps {
+  onClose: () => void;
+}
+
+const ChatbotModal = ({ onClose }: ChatbotModalProps) => {
+  const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
+  const [input, setInput] = useState("");
+
+  const handleSend = () => {
+    if (input.trim() === "") return;
+
+    // Add user message
+    setMessages([...messages, { text: input, isUser: true }]);
+
+    // Placeholder response
+    setTimeout(() => {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { text: "This is a placeholder response from the AI.", isUser: false }
+      ]);
+    }, 1000);
+
+    // Clear input
+    setInput("");
+  };
+
+  return (
+    <div className="fixed top-13 left-2/3 w-[350px] flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white rounded-xl shadow-lg w-[400px] h-[600px] flex flex-col">
+        {/* Header Section */}
+        <div className="flex justify-between items-center bg-blue-800 px-4 py-3 rounded-t-xl">
+          <h2 className="text-lg font-bold text-white">AI Scribe</h2>
+          <button onClick={onClose} className="text-white text-2xl">✕</button>
+        </div>
+
+        {/* Chat Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {messages.map((message, index) => (
+            <div key={index} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`p-3 rounded-xl ${
+                  message.isUser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+                } max-w-[75%] break-words`}
+              >
+                {message.text}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Input Section */}
+        <div className="p-4 flex items-center bg-white rounded-b-xl">
+          <input
+            type="text"
+            placeholder="Write your message"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSend()}
+            className="flex-1 p-2 border  border-gray-300 bg-gray-200 rounded-l-xl text-black"
+          />
+          <button onClick={handleSend} className="bg-blue-500 text-white p-2 rounded-r-xl">
+          ➔
           </button>
         </div>
       </div>

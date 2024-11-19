@@ -13,12 +13,11 @@ const config: Config = {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        exo: ['"Exo"', "sans-serif"],
-        karla: ['"Karla"', "sans-serif"],
+        exo: ["Exo", "sans-serif"],
+        karla: ["Karla", "sans-serif"],
       },
     },
   },
   plugins: [require("daisyui")],
 };
-
 export default config;

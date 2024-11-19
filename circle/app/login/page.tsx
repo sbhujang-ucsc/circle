@@ -45,10 +45,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
+    <div className="flex h-screen bg-gray-100 text-black">
       <div className="w-1/2 p-16 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-2">Login to Circle</h2>
-        <p className="mb-8 text-gray-400">
+        <p className="mb-8 text-gray-800">
           Don't have an account?{" "}
           <a href="/signup" className="text-[#6082EB] hover:underline">
             Sign up
@@ -67,7 +67,7 @@ const LoginPage = () => {
               placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 rounded-lg"
             />
           </div>
           <div className="relative mb-6">
@@ -77,7 +77,7 @@ const LoginPage = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 pr-10 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             <button
               type="button"
@@ -100,16 +100,16 @@ const LoginPage = () => {
         </form>
         <div className="mt-8">
           <p className="text-center text-gray-400 mb-4">Or sign in with</p>
-          <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
+          <button className="btn bg-gray-200 border border-gray-400 flex-1 w-full flex items-center justify-center hover:bg-[#6082EB] transition duration-300 rounded-lg">
             <img
-              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
+              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_dark_color_92x30dp.png"
               alt="Google"
               className="h-6"
             />
           </button>
         </div>
       </div>
-      <div className="w-1/2 relative overflow-hidden rounded-l-3xl">
+      <div className="w-1/2 relative overflow-hidden rounded-l-3xl text-white">
         <img
           src="https://as1.ftcdn.net/v2/jpg/02/25/01/90/1000_F_225019061_tRisS4zm7uoE0XmcYrmKzlh4ozD7RdfB.jpg"
           alt="Desert"

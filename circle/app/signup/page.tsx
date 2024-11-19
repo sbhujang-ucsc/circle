@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import darklogo from "../lightlogo.png";
 import Image from "next/image";
+import React from "react";
 
 const SignupPage = () => {
   const router = useRouter();
@@ -100,10 +101,11 @@ const SignupPage = () => {
       setIsModalOpen(true);            // Show modal
     }
   }; */
+  const [role, setRole] = React.useState("Patient");
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      <div className="w-1/2 relative overflow-hidden rounded-l-3xl">
+    <div className="flex h-screen bg-gray-100 text-black">
+      <div className="w-1/2 relative overflow-hidden rounded-r-3xl text-white">
         <img
           src="https://as1.ftcdn.net/v2/jpg/02/25/01/90/1000_F_225019061_tRisS4zm7uoE0XmcYrmKzlh4ozD7RdfB.jpg"
           alt="Desert"
@@ -130,9 +132,41 @@ const SignupPage = () => {
           </div>
         </div>
       </div>
+      {/* Sign Up Field --------------- --------------- --------------- --------------- --------------- ---------------*/}
       <div className="w-1/2 p-16 flex flex-col justify-center">
+        {/* Doctor Patient Sign Up Toggle --------------- --------------- --------------- ---------------*/}
+        <div className="flex flex-col items-center mb-10">
+          <div className="relative rounded-full bg-gray-200 min-w-[600px]">
+            {/* Sliding background */}
+            <div
+              className={`absolute top-0 left-1 w-1/2 h-full rounded-full bg-blue-500 transform transition-transform duration-500 ${
+                role === "Doctor" ? "translate-x-full" : "translate-x-0"
+              }`}
+            ></div>
+
+            {/* Toggle Buttons */}
+            <div className="relative flex">
+              <button
+                onClick={() => setRole("Patient")}
+                className={`${
+                  role === "Patient" ? "text-white" : "text-gray-600"
+                } flex-1 text-center text-2xl font-medium p-4 transition-colors duration-500`}
+              >
+                Patient Sign-Up
+              </button>
+              <button
+                onClick={() => setRole("Doctor")}
+                className={`${
+                  role === "Doctor" ? "text-white" : "text-gray-600"
+                } flex-1 text-center text-2xl font-medium p-4 transition-colors duration-500`}
+              >
+                Doctor Sign-Up
+              </button>
+            </div>
+          </div>
+        </div>
         <h2 className="text-4xl font-bold mb-2">Create an account</h2>
-        <p className="mb-8 text-gray-400">
+        <p className="mb-8 text-gray-600">
           Already have an account?{" "}
           <a href="/login" className="text-[#6082EB] hover:underline">
             Login
@@ -148,12 +182,12 @@ const SignupPage = () => {
             <input
               type="text"
               placeholder="First name"
-              className="input input-bordered w-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             <input
               type="text"
               placeholder="Last name"
-              className="input input-bordered w-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
           </div>
           <div className="mb-4">
@@ -163,10 +197,20 @@ const SignupPage = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             {emailError && <p className="text-red-500 text-sm">{emailError}</p>}{" "}
             {/* Show email error */}
+          </div>
+          {/* Added phone number field here --------------- */}
+          <div className="mb-4">
+            <input
+              type="phone"
+              placeholder="Phone Number"
+              id="phone"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
+            />
+            {emailError && <p className="text-red-500 text-sm">{emailError}</p>}{" "}
           </div>
           <div className="relative mb-6">
             <input
@@ -175,7 +219,7 @@ const SignupPage = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 pr-10 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             {passwordError && (
               <p className="text-red-500 text-sm">{passwordError}</p>
@@ -194,7 +238,10 @@ const SignupPage = () => {
             </button>
           </div>
           <label className="flex items-center mb-6">
-            <input type="checkbox" className="mr-2 checkbox border-white" />
+            <input
+              type="checkbox"
+              className="mr-2 checkbox border-gray-500 border-2"
+            />
             <span>
               I agree to the{" "}
               <a className="text-[#6082EB] hover:underline">
@@ -211,10 +258,10 @@ const SignupPage = () => {
           </button>
         </form>
         <div className="mt-8">
-          <p className="text-center text-gray-400 mb-4">Or register with</p>
-          <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
+          <p className="text-center text-gray-600 mb-4">Or register with</p>
+          <button className="btn bg-gray-300 border border-gray-100 flex-1 w-full flex items-center justify-center hover:bg-[#6082EB] transition duration-300 rounded-lg">
             <img
-              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
+              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_dark_color_92x30dp.png"
               alt="Google"
               className="h-6"
             />

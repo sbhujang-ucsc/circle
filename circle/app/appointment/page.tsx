@@ -27,7 +27,7 @@ const Appointment = () => {
   return (
     <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
       {/* Top bar */}
-      <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg text-[30px] font-exo font-semibold">
+      <div className="bg-[#356BBB] flex justify-between items-center border-b-2 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg text-[30px] font-exo font-semibold">
         <div className="flex">
           <button
             onClick={() => setActivePage("summary")}

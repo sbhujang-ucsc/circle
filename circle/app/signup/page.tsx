@@ -2,11 +2,12 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import darklogo from "../lightlogo.png";
+import { AuthContext } from "../../providers/AuthProvider";
 import Image from "next/image";
 import React from "react";
 
@@ -15,12 +16,49 @@ const SignupPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fName, setFName] = useState("");
+  const [lName, setLName] = useState("");
+  const [phone, setPhone] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
   const [modalMessage, setModalMessage] = useState(""); // Modal message content
 
   const [emailError, setEmailError] = useState(""); // Email validation error message
   const [passwordError, setPasswordError] = useState(""); // Password validation error message
+
+  const { user } = useContext(AuthContext);
+  const [validateRole, setValidateRole] = useState<string | null>(null); // Role state
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user role:", error.message);
+        } else {
+          setValidateRole(data.role);
+        }
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
+
+  useEffect(() => {
+    if (user && validateRole) {
+      if (validateRole === "Doctor") {
+        router.push("/doctor");
+      } else if (validateRole === "Patient") {
+        router.push("/patient");
+      }
+    }
+  }, [user, validateRole, router]);
 
   // Email validation using regex pattern for basic email structure
   const validateEmail = (email: string) => {
@@ -38,10 +76,14 @@ const SignupPage = () => {
   };
 
   const closeModal = () => {
+    setModalMessage("");
     setIsModalOpen(false); // Close modal
   };
 
   const handleSignup = async () => {
+    console.log("entering handle");
+    console.log(email);
+    console.log(password);
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
     // Reset error messages
@@ -64,19 +106,100 @@ const SignupPage = () => {
 
     // If both are valid, proceed with signup
     if (isEmailValid && isPasswordValid) {
-      const { error } = await supabase.auth.signUp({
+      console.log("Trying to authorize a new account");
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
-
       if (error) {
         setModalMessage(error.message); // Set error message in the modal
         setIsModalOpen(true); // Show modal
+        console.error("Error signing up:", error.message); // Log the error message
+        console.error("Full error object:", error); // Check the full error object
       } else {
+        console.log("Signup successful");
         setModalMessage(
           "Signup successful! Please check your email to confirm your account."
         );
         setIsModalOpen(true); // Show success message modal
+        const userId = data.user?.id;
+        if (userId) {
+          console.log(
+            "Now trying to see whether or not the UUID exists within the auth table"
+          );
+          try {
+            // Centralized check for UUID existence in the 'users' table
+            const { data: existingUser, error: selectError } = await supabase
+              .from("users")
+              .select("*")
+              .eq("user_id", userId)
+              .single(); // Fetch a single matching row
+
+            if (selectError && selectError.code !== "PGRST116") {
+              console.log("Found an error with lack of rows");
+              // PGRST116: No rows found
+              throw selectError; // Handle other errors
+            }
+
+            if (!existingUser) {
+              console.log(
+                "We didn't find any existing users so we can proceed with table insertion"
+              );
+              // Insert into the 'users' table
+              console.log("Inserting into Users table");
+              const { error: userInsertError } = await supabase
+                .from("users")
+                .insert([
+                  {
+                    user_id: userId, // Use the same UUID as the auth user
+                    first_name: fName,
+                    last_name: lName,
+                    phone: phone,
+                    email: email,
+                    role: role,
+                  },
+                ]);
+              if (userInsertError) throw userInsertError;
+
+              // Insert into role-specific tables
+              if (role === "Patient") {
+                console.log("Inserting into Patients table");
+                const { error: patientInsertError } = await supabase
+                  .from("patients")
+                  .insert([
+                    {
+                      user_id: userId,
+                      first_name: fName,
+                      last_name: lName,
+                      phone: phone,
+                      email: email,
+                    },
+                  ]);
+                if (patientInsertError) throw patientInsertError;
+              } else if (role === "Doctor") {
+                console.log("Inserting into Doctors table");
+                const { error: doctorInsertError } = await supabase
+                  .from("doctors")
+                  .insert([
+                    {
+                      user_id: userId,
+                      first_name: fName,
+                      last_name: lName,
+                      phone: phone,
+                      email: email,
+                    },
+                  ]);
+                if (doctorInsertError) throw doctorInsertError;
+              }
+            } else {
+              console.log("User already exists in the users table.");
+            }
+          } catch (error: any) {
+            console.error("Error handling user creation:", error.message);
+            setModalMessage("There was an error creating your account.");
+            setIsModalOpen(true);
+          }
+        }
       }
     }
   };
@@ -182,11 +305,17 @@ const SignupPage = () => {
             <input
               type="text"
               placeholder="First name"
+              id="fName"
+              value={fName}
+              onChange={(e) => setFName(e.target.value)}
               className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             <input
               type="text"
               placeholder="Last name"
+              id="lName"
+              value={lName}
+              onChange={(e) => setLName(e.target.value)}
               className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
           </div>
@@ -208,6 +337,8 @@ const SignupPage = () => {
               type="phone"
               placeholder="Phone Number"
               id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             {emailError && <p className="text-red-500 text-sm">{emailError}</p>}{" "}
@@ -251,7 +382,6 @@ const SignupPage = () => {
           </label>
           <button
             type="submit"
-            onClick={handleSignup}
             className="btn bg-[#6082EB] text-white w-full hover:bg-[#6082EB] transition duration-300 rounded-lg"
           >
             Create account

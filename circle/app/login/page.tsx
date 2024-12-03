@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../providers/AuthProvider";
@@ -13,23 +13,49 @@ import darklogo from "../lightlogo.png";
 const LoginPage = () => {
   const { user } = useContext(AuthContext);
   const router = useRouter();
-
-  if (user) {
-    router.push("/");
-  }
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const [role, setRole] = useState<string | null>(null); // Role state
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user role:", error.message);
+        } else {
+          setRole(data.role);
+        }
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
+
+  useEffect(() => {
+    if (user && role) {
+      if (role === "Doctor") {
+        router.push("/doctor");
+      } else if (role === "Patient") {
+        router.push("/patient");
+      }
+    }
+  }, [user, role, router]);
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithPassword({

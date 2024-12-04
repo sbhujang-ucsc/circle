@@ -67,8 +67,8 @@ const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
   
       // Check for session end signal
       if (
-        aiMessage ===
-        "I don't have any further questions. Thank you so much for taking the time to answer these questions. I'll relay your information to your primary care physician and they'll take it from there."
+        aiMessage.includes(
+        "I don't have any further questions. Thank you so much for taking the time to answer these questions. I'll relay your information to your primary care physician and they'll take it from there.")
       ) {
         console.log("Session end signal received.");
         onSessionEnd(); // Trigger session end callback

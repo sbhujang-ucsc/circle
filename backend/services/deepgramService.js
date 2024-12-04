@@ -1,5 +1,5 @@
+// services/deepgramService.js
 const axios = require("axios");
-// "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true" -- works much better for transcription
 
 const transcribeAudio = async (file) => {
   try {
@@ -14,7 +14,13 @@ const transcribeAudio = async (file) => {
       }
     );
 
-    return response.data.results.channels[0].alternatives[0].transcript;
+    // Log the entire response from Deepgram
+    console.log("Deepgram API response:", response.data);
+
+    const transcription = response.data.results.channels[0].alternatives[0].transcript;
+    console.log("Extracted transcription:", transcription);
+
+    return transcription;
   } catch (error) {
     console.error("Error from Deepgram API:", error.response?.data || error);
     throw new Error("Deepgram API transcription failed");

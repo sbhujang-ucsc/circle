@@ -1,3 +1,4 @@
+// routes/transcribe.js
 const express = require("express");
 const multer = require("multer");
 const { transcribeAudio } = require("../services/deepgramService");
@@ -13,6 +14,7 @@ router.post("/", upload.single("audio"), async (req, res) => {
 
     console.log("Received file:", file.originalname); // Log file name
 
+    console.log("File buffer size:", file.buffer.length);
     // Validate the audio file
     const validationError = validateFile(file);
     if (validationError) {
@@ -25,7 +27,8 @@ router.post("/", upload.single("audio"), async (req, res) => {
     const transcription = await transcribeAudio(file);
     console.log("Transcription received:", transcription);
 
-    res.status(200).json({ transcription });
+    // Send back the correct transcription
+    res.status(200).json({ transcription }); // Corrected line
   } catch (error) {
     console.error("/transcribe: Error in transcription:", error);
     res.status(500).json({ error: "Failed to process audio file" });

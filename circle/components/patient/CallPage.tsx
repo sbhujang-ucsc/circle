@@ -39,7 +39,6 @@ const CallPage = ({ handleLogout, handlePageChange }: { handleLogout: () => void
         <AudioRecorder onRecordingComplete={processVoiceMessage} disabled={isProcessing} />
 
         <div className="mt-8">
-          <h3 className="text-lg font-semibold">Conversation History:</h3>
           <ConversationHistory history={conversationHistory} />
         </div>
 

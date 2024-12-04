@@ -39,7 +39,8 @@ const HomePage = () => {
   return (
     <ProtectedRoute>
       <div>
-        <h1>Welcome to the Home Page</h1>
+        <h1>Welcome to the Home Page.</h1>
+        <h1>You shouldn't be able to access this.</h1>
         {role ? <p>Your role is: {role}</p> : <p>Loading role...</p>}
         <p>This is a protected route.</p>
       </div>

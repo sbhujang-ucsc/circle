@@ -30,7 +30,7 @@ const PatientLanding = () => {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["Patient"]}>
+    <ProtectedRoute allowedRoles={["Patient", "Admin"]}>
       <>
         {currentPage === 1 && (
           /// -----------------------------------------------------------------------------------------------------------

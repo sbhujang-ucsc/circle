@@ -1,0 +1,1 @@
+Server, API and associated AI code within a separate directory for modularity and to prevent spillover

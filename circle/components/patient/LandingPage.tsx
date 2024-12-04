@@ -2,6 +2,7 @@ import Image from "next/image";
 import patientlanding from "./patientlanding.jpeg";
 import { useEffect } from "react";
 
+
 const LandingPage = ({ handleLogout, handlePageChange }) => {
   useEffect(() => {
     console.log("LandingPage Rendered");

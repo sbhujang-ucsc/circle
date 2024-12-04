@@ -70,83 +70,67 @@ const DoctorLanding = () => {
     fetchDoctorData();
   }, [user]);
 
-  interface Appointment {
-    appointment_id: string;
-    date: string;
-    time: string;
-    patient_name: string;
-  }
-
-  // Function to handle details button click
-  const handleDetailsClick = (patientName: string) => {
-    // Navigate to the appointment page with patient name in query
-    router.push(`/appointment?patient_name=${encodeURIComponent(patientName)}`);
-  };
-
   return (
-    <ProtectedRoute allowedRoles={["Doctor", "Admin"]}>
-      <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
-        {/* Top bar */}
-        <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe] rounded-br-lg rounded-bl-lg p-4 text-[30px] font-bold font-exo">
-          <span className="text-white text-4xl font-semibold">
-            Welcome back, {doctorName || "Doctor"}
-          </span>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              router.push("/login");
-            }}
-            className="bg-[#356BBB] text-white border-2 border-white p-2 px-4 text-[30px] rounded-lg hover:bg-[#174a95]"
-          >
-            Log Out
-          </button>
-        </div>
-        {/* Appointment Table */}
-        <div className="bg-white flex-grow mx-auto shadow-lg rounded-2xl mt-6">
-          <table className="w-full border-collapse rounded-2xl overflow-hidden">
-            <thead>
-              <tr className="bg-[#bac7ef] text-left mx-[-30px]">
-                <th className="px-4 py-2 w-[200px] text-[18px]">
-                  Appointment ID
-                </th>
-                <th className="px-4 py-2 w-[200px] text-[18px]">Date</th>
-                <th className="px-4 py-2 w-[200px] text-[18px]">Time</th>
-                <th className="px-4 py-2 w-[250px] text-[18px]">
-                  Patient Name
-                </th>
-                <th className="px-4 py-2 w-[200px] text-[18px]">Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((appointment) => (
-                <tr key={appointment.appointment_id} className="border-b">
-                  <td className="px-4 py-2">{appointment.appointment_id}</td>
-                  <td className="px-4 py-2">
-                    {new Date(appointment.datetime).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2">
-                    {new Date(appointment.datetime).toLocaleTimeString()}
-                  </td>
-                  <td className="px-4 py-2">{appointment.patient_name}</td>
-                  <td className="px-4 py-2 text-center">
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/appointment/${appointment.appointment_id}`
-                        )
-                      }
-                      className="bg-[#9baee5] text-white py-2 px-5 rounded-lg hover:bg-[#90a3da] font-bold text-lg"
-                    >
-                      ➔
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
+      {/* Top bar */}
+      <div
+        className="bg-[#356BBB] flex justify-between items-center p-2
+            text-[30px] font-semibold px-6"
+      >
+        <span className="text-white text-4xl font-semibold">
+          Welcome back, {doctorName || "Doctor"}
+        </span>
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            router.push("/login");
+          }}
+          className="text-white py-2 px-10 rounded-xl bg-[#174a95] hover:bg-[#3b73c6] cursor-pointer"
+        >
+          Log Out
+        </button>
       </div>
-    </ProtectedRoute>
+      {/* Appointment Table */}
+      <div className="bg-white flex-grow mx-auto height-auto shadow-xl shadow-gray-500 rounded-2xl mt-6">
+        <table className="w-full border-collapse rounded-2xl overflow-hidden pt-4">
+          <thead className="bg-[F9FCFD] p-4 border-b-2 ">
+            <tr className="text-left text-xl">
+              <th className="px-4 py-4 w-[200px] ml-2">Appointment ID</th>
+              <th className="px-4 py-4 w-[200px] ">Date</th>
+              <th className="px-4 py-4 w-[200px]">Time</th>
+              <th className="px-4 py-4 w-[250px]">Patient Name</th>
+              <th className="px-4 py-4">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appointments.map((appointment) => (
+              <tr key={appointment.appointment_id} className="border-b">
+                <td className="px-4 py-2">{appointment.appointment_id}</td>
+                <td className="px-4 py-2">
+                  {new Date(appointment.datetime).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-2">
+                  {new Date(appointment.datetime).toLocaleTimeString()}
+                </td>
+                <td className="px-4 py-2">{appointment.patient_name}</td>
+                <td className="px-4 py-2 text-center">
+                  <button
+                    onClick={() =>
+                      router.push(
+                        `/appointment?app=${appointment.appointment_id}`
+                      )
+                    }
+                    className="bg-[#9baee5] text-white py-2 px-5 rounded-lg hover:bg-[#90a3da] font-bold text-lg"
+                  >
+                    ➔
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 

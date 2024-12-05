@@ -71,66 +71,68 @@ const DoctorLanding = () => {
   }, [user]);
 
   return (
-    <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
-      {/* Top bar */}
-      <div
-        className="bg-[#356BBB] flex justify-between items-center p-2
+    <ProtectedRoute allowedRoles={["Doctor"]}>
+      <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
+        {/* Top bar */}
+        <div
+          className="bg-[#356BBB] flex justify-between items-center p-2
             text-[30px] font-semibold px-6"
-      >
-        <span className="text-white text-4xl font-semibold">
-          Welcome back, {doctorName || "Doctor"}
-        </span>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            router.push("/login");
-          }}
-          className="text-white py-2 px-10 rounded-xl bg-[#174a95] hover:bg-[#3b73c6] cursor-pointer"
         >
-          Log Out
-        </button>
-      </div>
-      {/* Appointment Table */}
-      <div className="bg-white flex-grow mx-auto height-auto shadow-xl shadow-gray-500 rounded-2xl mt-6">
-        <table className="w-full border-collapse rounded-2xl overflow-hidden pt-4">
-          <thead className="bg-[F9FCFD] p-4 border-b-2 ">
-            <tr className="text-left text-xl">
-              <th className="px-4 py-4 w-[200px] ml-2">Appointment ID</th>
-              <th className="px-4 py-4 w-[200px] ">Date</th>
-              <th className="px-4 py-4 w-[200px]">Time</th>
-              <th className="px-4 py-4 w-[250px]">Patient Name</th>
-              <th className="px-4 py-4">Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((appointment) => (
-              <tr key={appointment.appointment_id} className="border-b">
-                <td className="px-4 py-2">{appointment.appointment_id}</td>
-                <td className="px-4 py-2">
-                  {new Date(appointment.datetime).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-2">
-                  {new Date(appointment.datetime).toLocaleTimeString()}
-                </td>
-                <td className="px-4 py-2">{appointment.patient_name}</td>
-                <td className="px-4 py-2 text-center">
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/appointment?app=${appointment.appointment_id}`
-                      )
-                    }
-                    className="bg-[#9baee5] text-white py-2 px-5 rounded-lg hover:bg-[#90a3da] font-bold text-lg"
-                  >
-                    ➔
-                  </button>
-                </td>
+          <span className="text-white text-4xl font-semibold">
+            Welcome back, {doctorName || "Doctor"}
+          </span>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push("/login");
+            }}
+            className="text-white py-2 px-10 rounded-xl bg-[#174a95] hover:bg-[#3b73c6] cursor-pointer"
+          >
+            Log Out
+          </button>
+        </div>
+        {/* Appointment Table */}
+        <div className="bg-white flex-grow mx-auto height-auto shadow-xl shadow-gray-500 rounded-2xl mt-6">
+          <table className="w-full border-collapse rounded-2xl overflow-hidden pt-4">
+            <thead className="bg-[F9FCFD] p-4 border-b-2 ">
+              <tr className="text-left text-xl">
+                <th className="px-4 py-4 w-[200px] ml-2">Appointment ID</th>
+                <th className="px-4 py-4 w-[200px] ">Date</th>
+                <th className="px-4 py-4 w-[200px]">Time</th>
+                <th className="px-4 py-4 w-[250px]">Patient Name</th>
+                <th className="px-4 py-4">Details</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {appointments.map((appointment) => (
+                <tr key={appointment.appointment_id} className="border-b">
+                  <td className="px-4 py-2">{appointment.appointment_id}</td>
+                  <td className="px-4 py-2">
+                    {new Date(appointment.datetime).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-2">
+                    {new Date(appointment.datetime).toLocaleTimeString()}
+                  </td>
+                  <td className="px-4 py-2">{appointment.patient_name}</td>
+                  <td className="px-4 py-2 text-center">
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/appointment?app=${appointment.appointment_id}`
+                        )
+                      }
+                      className="bg-[#9baee5] text-white py-2 px-5 rounded-lg hover:bg-[#90a3da] font-bold text-lg"
+                    >
+                      ➔
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

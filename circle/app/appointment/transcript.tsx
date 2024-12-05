@@ -1,10 +1,10 @@
 import React from "react";
 
 interface SummaryProps {
-  patientName: string | null;
+  patientUUID: string | null;
 }
 
-const Transcript = ({ patientName }: SummaryProps) => {
+const Transcript = ({ patientUUID }: SummaryProps) => {
   return <div>transcript</div>;
 };
 

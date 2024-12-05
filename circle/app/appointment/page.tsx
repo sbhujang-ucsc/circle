@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../providers/AuthProvider";
@@ -8,86 +8,121 @@ import Summary from "./summary";
 import Ehr from "./ehr";
 import Transcript from "./transcript";
 import { useSearchParams } from "next/navigation";
-import ProtectedRoute from "@/components/ProtectedRoute";
 
 const Appointment = () => {
   const router = useRouter();
-
-  // State to track which page is currently active
-  const [activePage, setActivePage] = useState("summary");
-
-  // Function to handle logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
-
   const searchParams = useSearchParams();
-  const patientName = searchParams.get("patient_name");
+  const appointmentId = searchParams.get("app"); // Use 'app' for appointment ID
+  const { user } = useContext(AuthContext); // Authenticated user context
+
+  const [activePage, setActivePage] = useState("summary");
+  const [patientUUID, setPatientUUID] = useState<string | null>(null); // Store patient UUID
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchAppointmentData = async () => {
+      if (!appointmentId) {
+        console.error("No appointment ID provided in the URL");
+        router.push("/doctor"); // Redirect if no appointment ID is provided
+        return;
+      }
+
+      try {
+        // Fetch the appointment details from Supabase
+        const { data: appointment, error } = await supabase
+          .from("appointments")
+          .select("patient")
+          .eq("appointment_id", appointmentId)
+          .single();
+
+        if (error) throw error;
+
+        if (!appointment) {
+          console.error("Appointment not found");
+          router.push("/doctor"); // Redirect if appointment not found
+          return;
+        }
+
+        // Set the patient UUID
+        setPatientUUID(appointment.patient);
+      } catch (error: any) {
+        console.error("Error fetching appointment data:", error.message);
+        router.push("/doctor"); // Redirect on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointmentData();
+  }, [appointmentId, router]);
+
+  if (loading) {
+    return <div className="text-center text-lg mt-10">Loading...</div>;
+  }
 
   return (
-    <ProtectedRoute allowedRoles={["Doctor", "Admin"]}>
-      <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
-        {/* Top bar */}
-        <div className="bg-[#356BBB] flex justify-between items-center border-b-2 border-b-solid border-b-[#edf9fe ] rounded-br-lg rounded-bl-lg text-[30px] font-exo font-semibold">
-          <div className="flex">
-            <button
-              onClick={() => setActivePage("summary")}
-              className={`${
-                activePage === "summary" ? "bg-[#174a95]" : "bg-[#356BBB]"
-              } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#174a95]`}
-            >
-              Summary
-            </button>
-            <button
-              onClick={() => setActivePage("ehr")}
-              className={`${
-                activePage === "ehr" ? "bg-[#174a95]" : "bg-[#356BBB]"
-              } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#174a95]`}
-            >
-              Patient EHR
-            </button>
-            <button
-              onClick={() => setActivePage("transcript")}
-              className={`${
-                activePage === "transcript" ? "bg-[#174a95]]" : "bg-[#356BBB]"
-              } text-white border-r-2 border-r-white p-3 px-4 text-[30px] rounded-br-lg rounded-tr-lg hover:bg-[#174a95]`}
-            >
-              Transcript
-            </button>
-          </div>
-
+    <div className="bg-[#dde3f2] min-h-screen flex flex-col">
+      {/* Top bar */}
+      <div
+        className="bg-[#356BBB] flex justify-between items-center py-0.5 px-2
+      text-[28px] font-semibold"
+      >
+        <div className="flex">
           <button
-            onClick={() => router.push("/doctor")}
-            className="bg-[#356BBB] text-white border-2 border-white p-3 px-4 text-[30px] rounded-lg hover:bg-[#174a95]"
+            onClick={() => setActivePage("summary")}
+            className={`${
+              activePage === "summary" ? "bg-[#174a95]" : "bg-[#356BBB]"
+            } text-white py-2 px-10 rounded-xl hover:bg-[#174a95]`}
           >
-            Dashboard
+            Summary
+          </button>
+          <button
+            onClick={() => setActivePage("ehr")}
+            className={`${
+              activePage === "ehr" ? "bg-[#174a95]" : "bg-[#356BBB]"
+            } text-white py-2 px-10 hover:bg-[#174a95] rounded-xl`}
+          >
+            Patient EHR
+          </button>
+          <button
+            onClick={() => setActivePage("transcript")}
+            className={`${
+              activePage === "transcript" ? "bg-[#174a95]" : "bg-[#356BBB]"
+            } text-white py-2 px-10 hover:bg-[#174a95] rounded-xl`}
+          >
+            Transcript
           </button>
         </div>
 
-        {/* Pages */}
-        <div>
-          {activePage === "summary" && (
-            <div>
-              {/*Summary page component */}
-              <Summary patientName={patientName} />
-            </div>
-          )}
-          {activePage === "ehr" && (
-            <div>
-              {/*Patient EHR page component */}
-              <Ehr patientName={patientName} />
-            </div>
-          )}
-          {activePage === "transcript" && (
-            <div>
-              {/* Transcript page component */}
-              <Transcript patientName={patientName} />
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => router.push("/doctor")}
+          className="bg-[#356BBB] text-white my-1 border-[1px] border-white py-2 px-10 rounded-xl hover:bg-[#174a95]"
+        >
+          Dashboard
+        </button>
       </div>
-    </ProtectedRoute>
+
+      {/* Pages */}
+      <div>
+        {activePage === "summary" && (
+          <div>
+            {/* Pass patient UUID to Summary component */}
+            <Summary patientUUID={patientUUID} apptId={appointmentId} />
+          </div>
+        )}
+        {activePage === "ehr" && (
+          <div>
+            {/* Pass patient UUID to Patient EHR component */}
+            <Ehr patientUUID={patientUUID} apptId={appointmentId} />
+          </div>
+        )}
+        {activePage === "transcript" && (
+          <div>
+            {/* Pass patient UUID to Transcript component */}
+            <Transcript patientUUID={patientUUID} apptId={appointmentId} />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

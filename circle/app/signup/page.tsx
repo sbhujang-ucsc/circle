@@ -176,6 +176,7 @@ const SignupPage = () => {
                     },
                   ]);
                 if (patientInsertError) throw patientInsertError;
+                createAppointmentForPatient(userId);
               } else if (role === "Doctor") {
                 console.log("Inserting into Doctors table");
                 const { error: doctorInsertError } = await supabase
@@ -204,26 +205,49 @@ const SignupPage = () => {
     }
   };
 
-  // FUTURE USE -- Google & Apple sign in
-  /*const handleGoogleSignIn = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-  });
-    if (error) {
-      setModalMessage(error.message);  // Display error in the modal
-      setIsModalOpen(true);            // Show modal
+  const createAppointmentForPatient = async (patientId: string) => {
+    try {
+      // Fetch a random doctor
+      const { data: doctors, error: doctorError } = await supabase
+        .from("doctors")
+        .select("user_id");
+
+      if (doctorError || !doctors || doctors.length === 0) {
+        throw new Error("No doctors available for appointments.");
+      }
+
+      const randomDoctor =
+        doctors[Math.floor(Math.random() * doctors.length)].user_id;
+
+      // Generate a random datetime 1 week from now
+      const appointmentDate = new Date();
+      appointmentDate.setDate(appointmentDate.getDate() + 7);
+      const randomHour = Math.floor(Math.random() * 10) + 7; // Random hour between 7am-5pm
+      const randomMinute = Math.floor(Math.random() * 60); // Random minute
+      appointmentDate.setHours(randomHour, randomMinute, 0, 0);
+
+      // Insert the appointment
+      const { error: appointmentError } = await supabase
+        .from("appointments")
+        .insert([
+          {
+            patient: patientId,
+            doctor: randomDoctor,
+            datetime: appointmentDate.toISOString(),
+            location: "12345 Example St, Santa Cruz, CA, 95060",
+          },
+        ]);
+
+      if (appointmentError) {
+        throw appointmentError;
+      }
+
+      console.log("Appointment successfully created for patient:", patientId);
+    } catch (error: any) {
+      console.error("Error creating appointment:", error.message);
     }
   };
 
-  const handleAppleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-    });
-    if (error) {
-      setModalMessage(error.message);  // Display error in the modal
-      setIsModalOpen(true);            // Show modal
-    }
-  }; */
   const [role, setRole] = React.useState("Patient");
 
   return (

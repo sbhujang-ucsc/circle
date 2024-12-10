@@ -74,7 +74,7 @@ const LandingPage = ({ handleLogout, handlePageChange }) => {
           {/* Button */}
           <div className="flex justify-center">
             <button
-              onClick={() => handlePageChange(4)}
+              onClick={() => handlePageChange(2)}
               className="bg-[#356BBB] py-4 px-10 rounded-[40px] text-[30px] font-semibold hover:bg-[#174a95] mt-10 text-white"
             >
               Get Started

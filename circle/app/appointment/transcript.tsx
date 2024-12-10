@@ -29,7 +29,7 @@ const Transcript = ({ patientUUID }: SummaryProps) => {
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-4 text-black">
-        Transcript for {patientName}
+        Transcript for {patientUUID}
       </h1>
 
       {/* Larger Chat Box with Visible Scrollbar */}
@@ -50,8 +50,8 @@ const Transcript = ({ patientUUID }: SummaryProps) => {
             >
               <p className="text-black">
                 <span className="font-bold">
-                  {message.role === "Patient Name" && patientName
-                    ? `${patientName}`
+                  {message.role === "Patient Name" && patientUUID
+                    ? `${patientUUID}`
                     : `${message.role}`}
                 </span>
                 : {message.text}

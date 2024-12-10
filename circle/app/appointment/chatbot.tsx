@@ -39,6 +39,7 @@ const ChatbotModal = ({ onClose }: ChatbotModalProps) => {
           ✕
         </button>
       </div>
+
       {/* Chat Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.map((message, index) => (
@@ -60,6 +61,7 @@ const ChatbotModal = ({ onClose }: ChatbotModalProps) => {
           </div>
         ))}
       </div>
+
       {/* Input Section */}
       <div className="p-4 flex items-center bg-white rounded-b-xl border-t border-gray-200">
         <input
@@ -80,4 +82,5 @@ const ChatbotModal = ({ onClose }: ChatbotModalProps) => {
     </div>
   );
 };
+
 export default ChatbotModal;

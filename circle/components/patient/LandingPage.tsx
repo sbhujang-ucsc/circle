@@ -1,8 +1,18 @@
 import Image from "next/image";
 import patientlanding from "./patientlanding.jpeg";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const LandingPage = ({ handleLogout, handlePageChange }) => {
+const LandingPage = ({
+  handleLogout,
+  handlePageChange,
+  patientUUID,
+  patientName,
+}: {
+  handleLogout: () => void;
+  handlePageChange: (page: number) => void;
+  patientUUID: string | null;
+  patientName: string | null;
+}) => {
   useEffect(() => {
     console.log("LandingPage Rendered");
   }, []);
@@ -12,7 +22,7 @@ const LandingPage = ({ handleLogout, handlePageChange }) => {
       {/* Top bar */}
       <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe] p-4 text-[30px] font-bold font-exo">
         <span className="text-white text-4xl font-semibold">
-          Welcome back, Example Name
+          Welcome back, {patientName}
         </span>
         <button
           onClick={handleLogout}
@@ -43,27 +53,25 @@ const LandingPage = ({ handleLogout, handlePageChange }) => {
 
           {/* Steps */}
           <div>
-            <div className="h-0.5 bg-gray-400 my-4"></div>
+            {/* <div className="h-0.5 bg-gray-400 my-4"></div>
             <div className="flex items-center space-x-8 p-4">
               <span className="font-bold text-gray-600 text-2xl">STEP 1</span>
               <p className="text-gray-600 text-2xl font-semibold">
                 Fill out a short questionnaire
               </p>
-            </div>
-
+            </div> */}
             {/* Step 2 */}
             <div className="h-0.5 bg-gray-400 my-4"></div>
             <div className="flex items-center space-x-8 p-4">
-              <span className="font-bold text-gray-600 text-2xl">STEP 2</span>
+              <span className="font-bold text-gray-600 text-2xl">STEP 1</span>
               <p className="text-gray-600 text-2xl font-semibold">
                 Call our smart AI assistant
               </p>
             </div>
-
             {/* Step 3 */}
             <div className="h-0.5 bg-gray-400 my-4"></div>
             <div className="flex items-center space-x-8 p-4">
-              <span className="font-bold text-gray-600 text-2xl">STEP 3</span>
+              <span className="font-bold text-gray-600 text-2xl">STEP 2</span>
               <p className="text-gray-600 text-2xl font-semibold">
                 Get ready for your appointment!
               </p>
@@ -74,7 +82,7 @@ const LandingPage = ({ handleLogout, handlePageChange }) => {
           {/* Button */}
           <div className="flex justify-center">
             <button
-              onClick={() => handlePageChange(2)}
+              onClick={() => handlePageChange(3)} // skipping the questionaire page because it seems decently redundant
               className="bg-[#356BBB] py-4 px-10 rounded-[40px] text-[30px] font-semibold hover:bg-[#174a95] mt-10 text-white"
             >
               Get Started

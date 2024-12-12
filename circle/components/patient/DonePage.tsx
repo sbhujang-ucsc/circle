@@ -1,5 +1,4 @@
 import Image from "next/image";
-import backIcon from "./back.png";
 import { useEffect, useContext, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { AuthContext } from "../../providers/AuthProvider";
@@ -13,37 +12,6 @@ const DonePage = ({ handleLogout, handlePageChange }) => {
     date: string;
     time: string;
   } | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    console.log(user.id);
-    const fetchAppointment = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("appointments")
-          .select("location, datetime")
-          .eq("patient", user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching appointment:", error.message);
-        } else {
-          setAppointmentDetails({
-            location: data.location,
-            date: new Date(data.datetime).toLocaleDateString(),
-            time: new Date(data.datetime).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          });
-        }
-      } catch (err) {
-        console.error("Unexpected error fetching appointment:", err);
-      }
-    };
-
-    fetchAppointment();
-  }, [user]);
 
   useEffect(() => {
     console.log("DonePage Rendered");

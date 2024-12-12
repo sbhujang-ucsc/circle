@@ -2,25 +2,66 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import darklogo from "../lightlogo.png";
+import { AuthContext } from "../../providers/AuthProvider";
+import Image from "next/image";
+import React from "react";
 
 const SignupPage = () => {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fName, setFName] = useState("");
+  const [lName, setLName] = useState("");
+  const [phone, setPhone] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
-  const [modalMessage, setModalMessage] = useState("");  // Modal message content
+  const [modalMessage, setModalMessage] = useState(""); // Modal message content
 
-  const [emailError, setEmailError] = useState("");      // Email validation error message
+  const [emailError, setEmailError] = useState(""); // Email validation error message
   const [passwordError, setPasswordError] = useState(""); // Password validation error message
 
-   // Email validation using regex pattern for basic email structure
-   const validateEmail = (email: string) => {
+  const { user } = useContext(AuthContext);
+  const [validateRole, setValidateRole] = useState<string | null>(null); // Role state
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user role:", error.message);
+        } else {
+          setValidateRole(data.role);
+        }
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
+
+  useEffect(() => {
+    if (user && validateRole) {
+      if (validateRole === "Doctor") {
+        router.push("/doctor");
+      } else if (validateRole === "Patient") {
+        router.push("/patient");
+      }
+    }
+  }, [user, validateRole, router]);
+
+  // Email validation using regex pattern for basic email structure
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -30,16 +71,19 @@ const SignupPage = () => {
     return password.length >= 6;
   };
 
-
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);             // Close modal
+    setModalMessage("");
+    setIsModalOpen(false); // Close modal
   };
 
   const handleSignup = async () => {
+    console.log("entering handle");
+    console.log(email);
+    console.log(password);
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
     // Reset error messages
@@ -62,61 +106,167 @@ const SignupPage = () => {
 
     // If both are valid, proceed with signup
     if (isEmailValid && isPasswordValid) {
-      const { error } = await supabase.auth.signUp({
+      console.log("Trying to authorize a new account");
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
-
       if (error) {
-        setModalMessage(error.message);  // Set error message in the modal
-        setIsModalOpen(true);            // Show modal
+        setModalMessage(error.message); // Set error message in the modal
+        setIsModalOpen(true); // Show modal
+        console.error("Error signing up:", error.message); // Log the error message
+        console.error("Full error object:", error); // Check the full error object
       } else {
+        console.log("Signup successful");
         setModalMessage(
           "Signup successful! Please check your email to confirm your account."
         );
-        setIsModalOpen(true);            // Show success message modal
+        setIsModalOpen(true); // Show success message modal
+        const userId = data.user?.id;
+        if (userId) {
+          console.log(
+            "Now trying to see whether or not the UUID exists within the auth table"
+          );
+          try {
+            // Centralized check for UUID existence in the 'users' table
+            const { data: existingUser, error: selectError } = await supabase
+              .from("users")
+              .select("*")
+              .eq("user_id", userId)
+              .single(); // Fetch a single matching row
+
+            if (selectError && selectError.code !== "PGRST116") {
+              console.log("Found an error with lack of rows");
+              // PGRST116: No rows found
+              throw selectError; // Handle other errors
+            }
+
+            if (!existingUser) {
+              console.log(
+                "We didn't find any existing users so we can proceed with table insertion"
+              );
+              // Insert into the 'users' table
+              console.log("Inserting into Users table");
+              const { error: userInsertError } = await supabase
+                .from("users")
+                .insert([
+                  {
+                    user_id: userId, // Use the same UUID as the auth user
+                    first_name: fName,
+                    last_name: lName,
+                    phone: phone,
+                    email: email,
+                    role: role,
+                  },
+                ]);
+              if (userInsertError) throw userInsertError;
+
+              // Insert into role-specific tables
+              if (role === "Patient") {
+                console.log("Inserting into Patients table");
+                const { error: patientInsertError } = await supabase
+                  .from("patients")
+                  .insert([
+                    {
+                      user_id: userId,
+                      first_name: fName,
+                      last_name: lName,
+                      phone: phone,
+                      email: email,
+                    },
+                  ]);
+                if (patientInsertError) throw patientInsertError;
+                createAppointmentForPatient(userId);
+              } else if (role === "Doctor") {
+                console.log("Inserting into Doctors table");
+                const { error: doctorInsertError } = await supabase
+                  .from("doctors")
+                  .insert([
+                    {
+                      user_id: userId,
+                      first_name: fName,
+                      last_name: lName,
+                      phone: phone,
+                      email: email,
+                    },
+                  ]);
+                if (doctorInsertError) throw doctorInsertError;
+              }
+            } else {
+              console.log("User already exists in the users table.");
+            }
+          } catch (error: any) {
+            console.error("Error handling user creation:", error.message);
+            setModalMessage("There was an error creating your account.");
+            setIsModalOpen(true);
+          }
+        }
       }
     }
   };
 
-  // FUTURE USE -- Google & Apple sign in
-  /*const handleGoogleSignIn = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-  });
-    if (error) {
-      setModalMessage(error.message);  // Display error in the modal
-      setIsModalOpen(true);            // Show modal
+  const createAppointmentForPatient = async (patientId: string) => {
+    try {
+      // Fetch a random doctor
+      const { data: doctors, error: doctorError } = await supabase
+        .from("doctors")
+        .select("user_id");
+
+      if (doctorError || !doctors || doctors.length === 0) {
+        throw new Error("No doctors available for appointments.");
+      }
+
+      const randomDoctor =
+        doctors[Math.floor(Math.random() * doctors.length)].user_id;
+
+      // Generate a random datetime 1 week from now
+      const appointmentDate = new Date();
+      appointmentDate.setDate(appointmentDate.getDate() + 7);
+      const randomHour = Math.floor(Math.random() * 10) + 7; // Random hour between 7am-5pm
+      const randomMinute = Math.floor(Math.random() * 60); // Random minute
+      appointmentDate.setHours(randomHour, randomMinute, 0, 0);
+
+      // Insert the appointment
+      const { error: appointmentError } = await supabase
+        .from("appointments")
+        .insert([
+          {
+            patient: patientId,
+            doctor: randomDoctor,
+            datetime: appointmentDate.toISOString(),
+            location: "12345 Example St, Santa Cruz, CA, 95060",
+          },
+        ]);
+
+      if (appointmentError) {
+        throw appointmentError;
+      }
+
+      console.log("Appointment successfully created for patient:", patientId);
+    } catch (error: any) {
+      console.error("Error creating appointment:", error.message);
     }
   };
 
-  const handleAppleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-    });
-    if (error) {
-      setModalMessage(error.message);  // Display error in the modal
-      setIsModalOpen(true);            // Show modal
-    }
-  }; */
-
+  const [role, setRole] = React.useState("Patient");
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      <div className="w-1/2 relative overflow-hidden rounded-r-3xl">
+    <div className="flex h-screen bg-gray-100 text-black">
+      <div className="w-1/2 relative overflow-hidden rounded-r-3xl text-white">
         <img
-          src="https://images.unsplash.com/photo-1581594693690-517d9a71e1f2?q=80&w=3000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          src="https://as1.ftcdn.net/v2/jpg/02/25/01/90/1000_F_225019061_tRisS4zm7uoE0XmcYrmKzlh4ozD7RdfB.jpg"
           alt="Desert"
           className="object-cover w-full h-full"
         />
-        <div className="absolute inset-0 bg-purple-900 bg-opacity-50"></div>
-        <div className="absolute top-8 left-8">
-          <h1 className="text-3xl font-bold">Circle</h1>
+        <div className="absolute inset-0 bg-[#4e6dc1] bg-opacity-80"></div>
+        <div className="absolute top-2 right-450">
+          <Image
+            src={darklogo}
+            alt="Back Icon"
+            className="max-h-[160px] max-w-[240px]"
+          />
         </div>
-        <div className="absolute top-8 right-8">
-           ||||||
-        </div>
-        <div className="absolute bottom-16 left-8 right-8">
+        <div className="absolute bottom-24 right-[240px]">
           <h2 className="text-4xl font-bold mb-4">
             Reconnecting Doctors & Patients
             <br />
@@ -129,25 +279,68 @@ const SignupPage = () => {
           </div>
         </div>
       </div>
+      {/* Sign Up Field --------------- --------------- --------------- --------------- --------------- ---------------*/}
       <div className="w-1/2 p-16 flex flex-col justify-center">
+        {/* Doctor Patient Sign Up Toggle --------------- --------------- --------------- ---------------*/}
+        <div className="flex flex-col items-center mb-10">
+          <div className="relative rounded-full bg-gray-200 min-w-[600px]">
+            {/* Sliding background */}
+            <div
+              className={`absolute top-0 left-1 w-1/2 h-full rounded-full bg-blue-500 transform transition-transform duration-500 ${
+                role === "Doctor" ? "translate-x-full" : "translate-x-0"
+              }`}
+            ></div>
+
+            {/* Toggle Buttons */}
+            <div className="relative flex">
+              <button
+                onClick={() => setRole("Patient")}
+                className={`${
+                  role === "Patient" ? "text-white" : "text-gray-600"
+                } flex-1 text-center text-2xl font-medium p-4 transition-colors duration-500`}
+              >
+                Patient Sign-Up
+              </button>
+              <button
+                onClick={() => setRole("Doctor")}
+                className={`${
+                  role === "Doctor" ? "text-white" : "text-gray-600"
+                } flex-1 text-center text-2xl font-medium p-4 transition-colors duration-500`}
+              >
+                Doctor Sign-Up
+              </button>
+            </div>
+          </div>
+        </div>
         <h2 className="text-4xl font-bold mb-2">Create an account</h2>
-        <p className="mb-8 text-gray-400">
+        <p className="mb-8 text-gray-600">
           Already have an account?{" "}
-          <a href='/login' className="text-purple-500 hover:underline">
-            Log in
+          <a href="/login" className="text-[#6082EB] hover:underline">
+            Login
           </a>
         </p>
-        <form onSubmit = {(e) => {e.preventDefault(); handleSignup();}}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSignup();
+          }}
+        >
           <div className="flex gap-4 mb-4">
             <input
               type="text"
               placeholder="First name"
-              className="input input-bordered w-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg"
+              id="fName"
+              value={fName}
+              onChange={(e) => setFName(e.target.value)}
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             <input
               type="text"
               placeholder="Last name"
-              className="input input-bordered w-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg"
+              id="lName"
+              value={lName}
+              onChange={(e) => setLName(e.target.value)}
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
           </div>
           <div className="mb-4">
@@ -157,9 +350,22 @@ const SignupPage = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
-            {emailError && <p className="text-red-500 text-sm">{emailError}</p>} {/* Show email error */}
+            {emailError && <p className="text-red-500 text-sm">{emailError}</p>}{" "}
+            {/* Show email error */}
+          </div>
+          {/* Added phone number field here --------------- */}
+          <div className="mb-4">
+            <input
+              type="phone"
+              placeholder="Phone Number"
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
+            />
+            {emailError && <p className="text-red-500 text-sm">{emailError}</p>}{" "}
           </div>
           <div className="relative mb-6">
             <input
@@ -168,11 +374,12 @@ const SignupPage = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input input-bordered w-full bg-gray-800 text-white px-4 py-2 pr-10 rounded-lg"
+              className="input border-1 border-gray-400 w-full bg-gray-300 text-black px-4 py-2 pr-10 rounded-lg"
             />
             {passwordError && (
               <p className="text-red-500 text-sm">{passwordError}</p>
-            )} {/* Show password error */}
+            )}{" "}
+            {/* Show password error */}
             <button
               type="button"
               onClick={togglePasswordVisibility}
@@ -186,40 +393,33 @@ const SignupPage = () => {
             </button>
           </div>
           <label className="flex items-center mb-6">
-            <input type="checkbox" className="mr-2 checkbox" />
+            <input
+              type="checkbox"
+              className="mr-2 checkbox border-gray-500 border-2"
+            />
             <span>
               I agree to the{" "}
-              <a className="text-purple-500 hover:underline">
+              <a className="text-[#6082EB] hover:underline">
                 Terms & Conditions
               </a>
             </span>
           </label>
           <button
             type="submit"
-            onClick={handleSignup}
-            className="btn bg-purple-600 text-white w-full hover:bg-purple-700 transition duration-300 rounded-lg"
+            className="btn bg-[#6082EB] text-white w-full hover:bg-[#6082EB] transition duration-300 rounded-lg"
           >
             Create account
           </button>
         </form>
         <div className="mt-8">
-          <p className="text-center text-gray-400 mb-4">Or register with</p>
-          <div className="flex gap-4">
-            <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
-              <img
-                src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_92x30dp.png"
-                alt="Google"
-                className="h-6"
-              />
-            </button>
-            <button className="btn border border-gray-700 flex-1 w-full flex items-center justify-center hover:bg-gray-800 transition duration-300 rounded-lg">
-              <img
-                src="https://www.apple.com/ac/globalnav/7/en_US/images/be15095f-5a20-57d0-ad14-cf4c638e223a/globalnav_apple_image__b5er5ngrzxqq_large.svg"
-                alt="Apple"
-                className="h-6"
-              />
-            </button>
-          </div>
+          <p className="text-center text-gray-600 mb-4">Or register with</p>
+          <button className="btn bg-gray-300 border border-gray-100 flex-1 w-full flex items-center justify-center hover:bg-[#6082EB] transition duration-300 rounded-lg">
+            <img
+              src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_dark_color_92x30dp.png"
+              alt="Google"
+              className="h-6"
+            />
+          </button>
         </div>
       </div>
       {isModalOpen && (
@@ -229,7 +429,7 @@ const SignupPage = () => {
             <p className="mb-4">{modalMessage}</p>
             <button
               onClick={closeModal}
-              className="btn bg-purple-600 text-black w-full hover:bg-purple-700 transition duration-300 rounded-lg"
+              className="btn bg-[#6082EB] text-black w-full hover:bg-[#6082EB] transition duration-300 rounded-lg"
             >
               Close
             </button>

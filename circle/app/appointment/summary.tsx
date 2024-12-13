@@ -12,6 +12,7 @@ const Summary = ({ apptId }: SummaryProps) => {
   const [patientInfo, setPatientInfo] = useState<any>(null);
   const [appointmentData, setAppointmentData] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiWarnings, setAiWarnings] = useState<string | null>(null); // New state for AI-generated warnings
   const [loading, setLoading] = useState(true);
 
   const toggleChatbot = () => setIsChatbotOpen(!isChatbotOpen);
@@ -36,6 +37,16 @@ const Summary = ({ apptId }: SummaryProps) => {
         .single();
       if (patientError) throw new Error(patientError.message);
       setPatientInfo(patient);
+
+      // Fetch AI Warnings
+      const warningsResponse = await fetch("http://localhost:8080/getTranscriptAnalysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointment_id: apptId }),
+      });
+      if (!warningsResponse.ok) throw new Error(await warningsResponse.text());
+      const { analysis } = await warningsResponse.json();
+      setAiWarnings(analysis);
 
       const response = await fetch("http://localhost:8080/getTranscriptSummary", {
         method: "POST",
@@ -239,10 +250,11 @@ const Summary = ({ apptId }: SummaryProps) => {
             <h3 className="text-2xl font-bold mb-4 text-black">
               Inconsistencies / Warnings
             </h3>
-            <ul className="list-disc pl-6 text-black">
-              <li>Example inconsistency: Allergy could affect medication...</li>
-              <li>Example inconsistency: Medication correlates with symptom...</li>
-            </ul>
+              {aiWarnings ? (
+                <div>{formatSummary(aiWarnings)}</div>
+              ) : (
+                <p className="text-gray-500">Loading AI warnings...</p>
+              )}
           </div>
           {/* Suggestions */}
           <div className="bg-white p-6 rounded-xl shadow-md">

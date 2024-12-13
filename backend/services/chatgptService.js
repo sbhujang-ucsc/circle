@@ -120,4 +120,52 @@ const generateChatGPTResponse = async (userInput) => {
   }
 };
 
-module.exports = { generateChatGPTResponse, generateSummary };
+
+/**
+ * Generate an analysis from a transcript using ChatGPT.
+ * @param {Object} transcript - JSON transcript data.
+ * @returns {Promise<string>} - Generated analysis.
+ */
+const generateAnalysis = async (transcript) => {
+  const conversation = [
+    {
+      role: "system",
+      content:
+        `
+        You're a medical assistant who helps take some of the stress away from the doctor. Although you cannot generate diagnoses, you try to alert the doctor of any potentially
+        important information and try to generate any important connections that the doctor may be too fatigued to notice. You should be able to find links and potential hints to conditions and link at this. 
+        You should also be alerting the doctor of any allergy interactions, anything that may be relevant in terms of family history, and more.
+        
+        The format should consist of dashes to delineate lists. Please generate header items of Symptoms, Family History, Recent Illness/Injury, Patient Concerns, Other which you may define with a "#".
+        You may use ** ** to indicate you want to bold text.
+
+        The user will now provide the transcript in the next message at which point, you may analyze.
+        `,
+    },
+    {
+      role: "user",
+      content: `Analyze the following transcript:\n\n${JSON.stringify(
+        transcript
+      )}`,
+    },
+  ];
+
+  const response = await axios.post(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      model: "gpt-4",
+      messages: conversation,
+      max_tokens: 500,
+      temperature: 0.7,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      }
+    }
+  );
+
+  return response.data.choices[0].message.content;
+};
+
+module.exports = { generateChatGPTResponse, generateSummary, generateAnalysis };

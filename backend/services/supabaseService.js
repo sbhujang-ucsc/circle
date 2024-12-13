@@ -23,7 +23,7 @@ async function fetchTranscript(appointment_id) {
 
     if (error) throw error;
 
-    return data.transcript; // Return the JSON transcript
+    return data?.transcript || null; // Return the JSON transcript
   } catch (error) {
     console.error("Error fetching transcript:", error.message);
     throw error;

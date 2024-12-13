@@ -1,5 +1,14 @@
 const axios = require("axios");
-const { initialSystemPrompt } = require("../utils/promptUtils");
+const { initialSystemPrompt, analysisPrompt } = require("../utils/promptUtils");
+const { fetchEHRFile } = require("./supabaseService.js");
+const fs = require("fs");
+const OpenAI = require("openai");
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Ensure your API key is loaded from environment variables
+});
+
+let assistantId;
 
 let conversationHistory = [
   {
@@ -120,52 +129,107 @@ const generateChatGPTResponse = async (userInput) => {
   }
 };
 
-
 /**
- * Generate an analysis from a transcript using ChatGPT.
- * @param {Object} transcript - JSON transcript data.
- * @returns {Promise<string>} - Generated analysis.
+ * Upload an EHR file to OpenAI and return its file ID.
+ * @param {string} tempFilePath - Path to the temporary file.
+ * @returns {Promise<string>} - The OpenAI file ID.
  */
-const generateAnalysis = async (transcript) => {
-  const conversation = [
-    {
-      role: "system",
-      content:
-        `
-        You're a medical assistant who helps take some of the stress away from the doctor. Although you cannot generate diagnoses, you try to alert the doctor of any potentially
-        important information and try to generate any important connections that the doctor may be too fatigued to notice. You should be able to find links and potential hints to conditions and link at this. 
-        You should also be alerting the doctor of any allergy interactions, anything that may be relevant in terms of family history, and more.
-        
-        The format should consist of dashes to delineate lists. Please generate header items of Symptoms, Family History, Recent Illness/Injury, Patient Concerns, Other which you may define with a "#".
-        You may use ** ** to indicate you want to bold text.
+const uploadEHRToOpenAI = async (tempFilePath) => {
+  try {
+    stream = fs.createReadStream(tempFilePath);
+  } catch( error ) {
+    console.log("Creating stream failed.")
+  }
+  try {
+    const uploadedFile = await openai.files.create({
+      file: stream,
+      purpose: "assistants",
+    });
 
-        The user will now provide the transcript in the next message at which point, you may analyze.
-        `,
-    },
-    {
-      role: "user",
-      content: `Analyze the following transcript:\n\n${JSON.stringify(
-        transcript
-      )}`,
-    },
-  ];
+    // Clean up the temporary file after uploading
+    //fs.unlinkSync(tempFilePath);
 
-  const response = await axios.post(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      model: "gpt-4",
-      messages: conversation,
-      max_tokens: 500,
-      temperature: 0.7,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      }
-    }
-  );
-
-  return response.data.choices[0].message.content;
+    return uploadedFile.id; // Return the file ID
+  } catch (error) {
+    console.error("Error uploading EHR to OpenAI:", error.message);
+    throw error;
+  }
 };
 
-module.exports = { generateChatGPTResponse, generateSummary, generateAnalysis };
+/**
+ * Create a new assistant and store its ID for subsequent use.
+ * @returns {Promise<string>} - The ID of the created assistant.
+ */
+const createAssistant = async () => {
+  try {
+    // If Assistant ID is cached, return it
+    if (assistantId) return assistantId;
+
+    // Create a new Assistant using OpenAI API
+    const assistant = await openai.beta.assistants.create({
+      name: "Transcript Analyzer",
+      instructions: analysisPrompt,
+      model: "gpt-4-turbo-preview",
+      tools: [{ type: "file_search" }], // Include the file_search tool
+    });
+
+    assistantId = assistant.id; // Cache the Assistant ID for reuse
+    console.log("Created Assistant ID:", assistantId);
+    return assistantId;
+  } catch (error) {
+    console.error("Error creating assistant:", error.message);
+    throw new Error("Failed to create assistant");
+  }
+};
+
+/**
+ * Generate an analysis for a transcript with EHR context.
+ * @param {Object} transcript - The transcript JSON data.
+ * @param {string} patientId - The ID of the patient (to fetch EHR).
+ * @returns {Promise<string>} - The analysis from OpenAI.
+ */
+const generateTranscriptAnalysis = async (transcript, patientId) => {
+  console.log("generateTranscriptAnalysis");
+  try {
+    // Step 1: Fetch EHR file from Supabase and save locally
+    const tempFilePath = await fetchEHRFile(patientId);
+
+    // Step 2: Upload the EHR file to OpenAI and get file ID
+    const fileId = await uploadEHRToOpenAI(tempFilePath);
+
+    // Step 3: Create or retrieve the Assistant ID
+    const assistantId = await createAssistant(); // Dynamically create or fetch the Assistant ID
+    if (!assistantId) {
+      throw new Error("Assistant ID is undefined. Failed to create or retrieve Assistant ID.");
+    }
+
+    // Step 4: Create a thread and attach the file
+    const thread = await openai.beta.threads.create({
+      messages: [
+        {
+          role: "user",
+          content: `Analyze the given Electronic Health Record ${tempFilePath} along with the transcript to generate responses:\n\n${JSON.stringify(transcript)}`,
+          attachments: [{ file_id: fileId, tools: [{ type: "file_search" }] }],
+        },
+      ],
+    });
+
+    // Step 5: Run the analysis and fetch results
+    const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
+      assistant_id: assistantId, // Use the dynamically created Assistant ID
+    });
+
+    const messages = await openai.beta.threads.messages.list(thread.id, {
+      run_id: run.id,
+    });
+
+    // Extract the final analysis
+    const analysis = messages.data.pop()?.content?.[0]?.text || "No analysis found.";
+    return analysis;
+  } catch (error) {
+    console.error("Error generating transcript analysis:", error.message);
+    throw error;
+  }
+};
+
+module.exports = { generateChatGPTResponse, generateSummary, generateTranscriptAnalysis };

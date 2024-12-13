@@ -1,34 +1,22 @@
-/**
- * Route: getTranscriptAnalysis
- * Purpose: Fetch transcript data from Supabase for a specific appointment,
- *          call OpenAI to generate an analysis, and return the analysis.
- */
-
 const express = require("express");
 const router = express.Router();
-const supabaseService = require("../services/supabaseService");
-const chatgptService = require("../services/chatgptService");
+const { generateTranscriptAnalysis } = require("../services/chatgptService");
+require("dotenv").config();
 
-// Route handler
+/**
+ * POST /getTranscriptAnalysis
+ * Generate an analysis for a transcript with EHR context.
+ */
 router.post("/", async (req, res) => {
-  const { appointment_id } = req.body;
+  console.log('Here!');
+  const { appointment_id, transcript, patient_id } = req.body;
 
-  if (!appointment_id) {
-    return res.status(400).json({ error: "appointment_id is required" });
+  if (!appointment_id || !transcript || !patient_id) {
+    return res.status(400).json({ error: "appointment_id, transcript, and patient_id are required" });
   }
 
   try {
-    // 1. Fetch the transcript from Supabase
-    const transcript = await supabaseService.fetchTranscript(appointment_id);
-
-    if (!transcript) {
-      return res.status(404).json({ error: "Transcript not found" });
-    }
-
-    // 2. Generate an analysis using OpenAI
-    const analysis = await chatgptService.generateAnalysis(transcript);
-
-    // 3. Return the analysis to the client
+    const analysis = await generateTranscriptAnalysis(transcript, patient_id);
     return res.status(200).json({ analysis });
   } catch (error) {
     console.error("Error generating transcript analysis:", error.message);

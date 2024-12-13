@@ -19,7 +19,7 @@ const LandingPage = ({
 
   return (
     <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
-      {/* Top bar */}
+      {/* Top nav bar */}
       <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe] p-4 text-[30px] font-bold font-exo">
         <span className="text-white text-4xl font-semibold">
           Welcome back, {patientName}
@@ -53,14 +53,7 @@ const LandingPage = ({
 
           {/* Steps */}
           <div>
-            {/* <div className="h-0.5 bg-gray-400 my-4"></div>
-            <div className="flex items-center space-x-8 p-4">
-              <span className="font-bold text-gray-600 text-2xl">STEP 1</span>
-              <p className="text-gray-600 text-2xl font-semibold">
-                Fill out a short questionnaire
-              </p>
-            </div> */}
-            {/* Step 2 */}
+            {/* Step 1 */}
             <div className="h-0.5 bg-gray-400 my-4"></div>
             <div className="flex items-center space-x-8 p-4">
               <span className="font-bold text-gray-600 text-2xl">STEP 1</span>
@@ -68,7 +61,7 @@ const LandingPage = ({
                 Call our smart AI assistant
               </p>
             </div>
-            {/* Step 3 */}
+            {/* Step 2 */}
             <div className="h-0.5 bg-gray-400 my-4"></div>
             <div className="flex items-center space-x-8 p-4">
               <span className="font-bold text-gray-600 text-2xl">STEP 2</span>

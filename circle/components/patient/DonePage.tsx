@@ -4,8 +4,15 @@ import { supabase } from "@/lib/supabaseClient";
 import { AuthContext } from "../../providers/AuthProvider";
 import Sidebar from "@/components/patient/Sidebar";
 
-// DonePage.tsx
-const DonePage = ({ handleLogout, handlePageChange }) => {
+interface DonePageProps {
+  handleLogout: () => void;
+  handlePageChange: (page: number) => void;
+}
+
+const DonePage: React.FC<DonePageProps> = ({
+  handleLogout,
+  handlePageChange,
+}) => {
   const { user } = useContext(AuthContext);
   const [appointmentDetails, setAppointmentDetails] = useState<{
     location: string;

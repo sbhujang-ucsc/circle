@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@supabase/supabase-js':
-    specifier: ^2.45.6
+    specifier: ^2.47.6
     version: 2.47.6
   axios:
     specifier: ^1.7.9

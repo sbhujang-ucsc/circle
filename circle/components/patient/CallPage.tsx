@@ -14,38 +14,35 @@ const CallPage = ({
   handlePageChange: (page: number) => void;
   appointmentID: string | null;
 }) => {
-  const textToJSON = (transcript: string) => {
-    const lines = transcript.split("\n"); // Split the text into lines
-    const conversation: Array<{ speaker: string; text: string }> = []; // Typed array for the conversation
+  // const textToJSON = (transcript: string) => {
+  //   const lines = transcript.split("\n"); // Split the text into lines
+  //   const conversation: Array<{ speaker: string; text: string }> = []; // Typed array for the conversation
 
-    lines.forEach((line) => {
-      const match = line.match(/^(You|AI):\s(.+)$/); // Match speaker and text
-      if (match) {
-        const [_, speaker, text] = match; // Extract speaker and text
-        conversation.push({ speaker, text });
-      }
-    });
+  //   lines.forEach((line) => {
+  //     const match = line.match(/^(You|AI):\s(.+)$/); // Match speaker and text
+  //     if (match) {
+  //       const [_, speaker, text] = match; // Extract speaker and text
+  //       conversation.push({ speaker, text });
+  //     }
+  //   });
 
-    return conversation;
-  };
+  //   return conversation;
+  // };
   const {
     isProcessing,
     conversationHistory,
-    finalTranscript,
     processVoiceMessage,
     audioRef,
   } = useVoiceAssistant({
-    onSessionEnd: async () => {
+    onSessionEnd: async (localConversationHistory) => {
       try {
-        if (appointmentID && finalTranscript) {
-          // Parse finalTranscript into JSON
-          const transcriptJSON = textToJSON(finalTranscript);
+        if (appointmentID && localConversationHistory.length > 0) {
           // Update the transcript column in the appointments table
           const { error } = await supabase
             .from("appointments")
-            .update({ transcript: transcriptJSON })
+            .update({ transcript: localConversationHistory })
             .eq("appointment_id", appointmentID);
-
+    
           if (error) {
             console.error("Error updating transcript in Supabase:", error);
           } else {
@@ -53,12 +50,12 @@ const CallPage = ({
           }
         }
       } catch (error) {
-        console.error("Error parsing or saving transcript:", error);
+        console.error("Error saving transcript:", error);
       }
-
-      console.log("Session ended. Final Transcript:", finalTranscript);
+    
+      console.log("Session ended. Transcript:", localConversationHistory);
       handlePageChange(4); // Navigate to DonePage
-    },
+    }    
   });
 
   return (

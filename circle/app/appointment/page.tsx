@@ -1,59 +1,31 @@
 "use client";
 
-import { useState, useContext, useEffect } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AuthContext } from "../../providers/AuthProvider";
 import Summary from "./summary";
 import Ehr from "./ehr";
 import Transcript from "./transcript";
-import { useSearchParams } from "next/navigation";
 
 const Appointment = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const appointmentId = searchParams.get("app"); // Use 'app' for appointment ID
-  const { user } = useContext(AuthContext); // Authenticated user context
 
   const [activePage, setActivePage] = useState("summary");
-  const [patientUUID, setPatientUUID] = useState<string | null>(null); // Store patient UUID
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchAppointmentData = async () => {
-      if (!appointmentId) {
-        console.error("No appointment ID provided in the URL");
-        router.push("/doctor"); // Redirect if no appointment ID is provided
-        return;
-      }
+    // Extract appointmentId from the URL query string
+    const params = new URLSearchParams(window.location.search);
+    const appId = params.get("app");
 
-      try {
-        // Fetch the appointment details from Supabase
-        const { data: appointment, error } = await supabase
-          .from("appointments")
-          .select("patient")
-          .eq("appointment_id", appointmentId)
-          .single();
-
-        if (error) throw error;
-
-        if (!appointment) {
-          console.error("Appointment not found");
-          router.push("/doctor"); // Redirect if appointment not found
-          return;
-        }
-
-        // Set the patient UUID
-        setPatientUUID(appointment.patient);
-      } catch (error: any) {
-        console.error("Error fetching appointment data:", error.message);
-        router.push("/doctor"); // Redirect on error
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppointmentData();
-  }, [appointmentId, router]);
+    if (!appId) {
+      console.error("No appointment ID provided in the URL.");
+      router.push("/doctor"); // Redirect to doctor dashboard if no ID
+    } else {
+      setAppointmentId(appId);
+      setLoading(false);
+    }
+  }, [router]);
 
   if (loading) {
     return <div className="text-center text-lg mt-10">Loading...</div>;
@@ -101,25 +73,16 @@ const Appointment = () => {
         </button>
       </div>
 
-      {/* Pages */}
+      {/* Content Area */}
       <div>
         {activePage === "summary" && (
-          <div>
-            {/* Pass patient UUID to Summary component */}
-            <Summary patientUUID={patientUUID} apptId={appointmentId} />
-          </div>
+          <Summary apptId={appointmentId} />
         )}
         {activePage === "ehr" && (
-          <div>
-            {/* Pass patient UUID to Patient EHR component */}
-            <Ehr patientUUID={patientUUID} apptId={appointmentId} />
-          </div>
+          <Ehr apptId={appointmentId} />
         )}
         {activePage === "transcript" && (
-          <div>
-            {/* Pass patient UUID to Transcript component */}
-            <Transcript patientUUID={patientUUID} apptId={appointmentId} />
-          </div>
+          <Transcript apptId={appointmentId} />
         )}
       </div>
     </div>

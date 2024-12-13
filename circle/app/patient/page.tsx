@@ -99,7 +99,6 @@ const PatientLanding = () => {
           handleLogout={handleLogout}
           handlePageChange={handlePageChange}
           appointmentID={appointmentID}
-          patientUUID={patientUUID}
         />
       )}
     </ProtectedRoute>

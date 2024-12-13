@@ -1,8 +1,13 @@
 import { useState, useRef } from "react";
 
+interface Message {
+  role: "user" | "assistant"; // Define possible roles
+  content: string; // Define content as a string
+}
+
 const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
   const [isProcessing, setIsProcessing] = useState(false); // Whether processing is ongoing
-  const [conversationHistory, setConversationHistory] = useState([]); // User and AI messages
+  const [conversationHistory, setConversationHistory] = useState<Message[]>([]); // User and AI messages
   const [finalTranscript, setFinalTranscript] = useState(""); // Full transcript
   const audioRef = useRef<HTMLAudioElement | null>(null); // Ref for TTS audio playback
 

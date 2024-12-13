@@ -12,6 +12,7 @@ const Summary = ({ apptId }: SummaryProps) => {
   const [patientInfo, setPatientInfo] = useState<any>(null);
   const [appointmentData, setAppointmentData] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiWarnings, setAiWarnings] = useState<string | null>(null); // New state for AI-generated warnings
   const [loading, setLoading] = useState(true);
 
   const toggleChatbot = () => setIsChatbotOpen(!isChatbotOpen);
@@ -37,6 +38,21 @@ const Summary = ({ apptId }: SummaryProps) => {
       if (patientError) throw new Error(patientError.message);
       setPatientInfo(patient);
 
+      console.log(`Appt: ${appointment.patient}`);
+      // Fetch AI Warnings
+      const warningsResponse = await fetch("http://localhost:8080/getTranscriptAnalysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appointment_id: apptId,
+          transcript: appointment.transcript,
+          patient_id: appointment.patient,
+        }),
+      });
+      if (!warningsResponse.ok) throw new Error(await warningsResponse.text());
+      const { analysis } = await warningsResponse.json();
+      setAiWarnings(analysis);
+
       const response = await fetch("http://localhost:8080/getTranscriptSummary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,6 +73,11 @@ const Summary = ({ apptId }: SummaryProps) => {
   }, [apptId]);
 
   const formatSummary = (summary: string) => {
+    console.log(typeof(summary))
+    if (typeof summary == "object") {
+      console.log(summary);
+      summary = summary.value;
+    }
     const lines = summary.split("\n").filter((line) => line.trim() !== "");
     const formattedSummary: JSX.Element[] = [];
   
@@ -207,13 +228,6 @@ const Summary = ({ apptId }: SummaryProps) => {
           <h3 className="text-xl font-bold mb-4">{`${patientInfo.first_name} ${patientInfo.last_name}`}</h3>
           <p className="text-black">Age: {patientInfo.basic_data?.age || "N/A"}</p>
           <p className="text-black">Gender: {patientInfo.basic_data?.gender || "N/A"}</p>
-          <p className="text-black">Weight: {patientInfo.basic_data?.weight || "N/A"}kg</p>
-          <p className="text-black">Height: {patientInfo.basic_data?.height || "N/A"}</p>
-          <p className="text-black">Allergies: {patientInfo.basic_data?.allergies || "None"}</p>
-          <p className="text-black mt-4 text-sm">
-            Appointment Date:{" "}
-            {new Date(appointmentData.datetime).toLocaleString()}
-          </p>
         </div>
       </div>
       {/* Main Content */}
@@ -239,25 +253,34 @@ const Summary = ({ apptId }: SummaryProps) => {
             <h3 className="text-2xl font-bold mb-4 text-black">
               Inconsistencies / Warnings
             </h3>
-            <ul className="list-disc pl-6 text-black">
-              <li>Example inconsistency: Allergy could affect medication...</li>
-              <li>Example inconsistency: Medication correlates with symptom...</li>
-            </ul>
+            {aiWarnings ? (
+              <div>{formatSummary(aiWarnings)}</div>
+            ) : (
+              <p className="text-gray-500">Loading AI warnings...</p>
+            )}
           </div>
           {/* Suggestions */}
           <div className="bg-white p-6 rounded-xl shadow-md">
             <h3 className="text-2xl font-bold mb-4 text-black">
               Suggested Ideas
             </h3>
-            <ul className="list-disc pl-6 text-black">
-              <li>Example suggestion: Medication options...</li>
-              <li>Example suggestion: Questions to clarify...</li>
-            </ul>
           </div>
         </div>
       </div>
+      {/* Chatbot */}
+      <div className="fixed bottom-8 right-8">
+        <button
+          onClick={toggleChatbot}
+          className="bg-[#356BBB] text-white text-lg py-3 px-6 rounded-lg shadow-lg hover:bg-[#174a95] flex items-center space-x-2"
+        >
+          <span>💬</span>
+          <span>Chat with AI</span>
+        </button>
+      </div>
+      {isChatbotOpen && <ChatbotModal onClose={toggleChatbot} />}
     </div>
   );
 };
+
 
 export default Summary;

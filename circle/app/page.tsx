@@ -2,40 +2,55 @@
 
 "use client";
 
-import ProtectedRoute from "../components/ProtectedRoute";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../providers/AuthProvider";
 import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 const HomePage = () => {
   const { user } = useContext(AuthContext);
   const [role, setRole] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (user) {
-        try {
-          // Fetch the role from the `users` table using the user's ID
-          const { data, error } = await supabase
-            .from("users")
-            .select("role")
-            .eq("user_id", user.id)
-            .single();
+    // If user is not authenticated, redirect to /login page
+    if (!user) {
+      router.push("/login");
+      return;
+    }
 
-          if (error) {
-            console.error("Error fetching user role:", error.message);
-          } else {
-            setRole(data.role); // Set the role in state
-            console.log(`User role: ${data.role}`);
-          }
-        } catch (err) {
-          console.error("Error fetching role:", err);
+    const fetchUserRole = async () => {
+      try {
+        // Fetch the role from the `users` table using the user's ID
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user role:", error.message);
+        } else {
+          setRole(data.role); // Set the role in state
+          console.log(`User role: ${data.role}`);
         }
+      } catch (err) {
+        console.error("Error fetching role:", err);
       }
     };
 
     fetchUserRole();
-  }, [user]);
+  }, [user, router]);
+
+  if (!user || role === null) {
+    return (
+      <div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <ProtectedRoute>
       <div>

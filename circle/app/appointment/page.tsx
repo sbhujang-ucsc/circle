@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import Summary from "./summary";
 import Ehr from "./ehr";
 import Transcript from "./transcript";
@@ -11,6 +12,7 @@ const Appointment = () => {
 
   const [activePage, setActivePage] = useState("summary");
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  const [patientID, setPatientID] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +28,25 @@ const Appointment = () => {
       setLoading(false);
     }
   }, [router]);
+  useEffect(() => {
+    // Ensure the appointmentId is set before calling getPatientID
+    if (appointmentId) {
+      const getPatientID = async () => {
+        const { data: patient, error: patientError } = await supabase
+          .from("appointments")
+          .select("patient")
+          .eq("appointment_id", appointmentId)
+          .single();
+
+        if (patientError) {
+          console.error("Error fetching patient ID:", patientError.message);
+        } else {
+          setPatientID(patient?.patient || null); // Set patientID or null if no data
+        }
+      };
+      getPatientID();
+    }
+  }, [appointmentId]); 
 
   if (loading) {
     return <div className="text-center text-lg mt-10">Loading...</div>;
@@ -35,8 +56,7 @@ const Appointment = () => {
     <div className="bg-[#dde3f2] min-h-screen flex flex-col">
       {/* Top bar */}
       <div
-        className="bg-[#356BBB] flex justify-between items-center py-0.5 px-2
-      text-[28px] font-semibold"
+        className="bg-[#356BBB] flex justify-between items-center py-0.5 px-2 text-[28px] font-semibold"
       >
         <div className="flex">
           <button
@@ -79,10 +99,10 @@ const Appointment = () => {
           <Summary apptId={appointmentId} />
         )}
         {activePage === "ehr" && (
-          <Ehr apptId={appointmentId} />
+          <Ehr patientUUID={patientID} />
         )}
         {activePage === "transcript" && (
-          <Transcript apptId={appointmentId} />
+          <Transcript patientUUID={patientID} appointmentID={appointmentId} />
         )}
       </div>
     </div>

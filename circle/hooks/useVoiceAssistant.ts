@@ -5,7 +5,7 @@ interface Message {
   content: string; // Define content as a string
 }
 
-const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
+const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: (localConversationHistory: any) => void }) => {
   const [isProcessing, setIsProcessing] = useState(false); // Whether processing is ongoing
   const [conversationHistory, setConversationHistory] = useState<Message[]>([]); // User and AI messages
   const [finalTranscript, setFinalTranscript] = useState(""); // Full transcript
@@ -17,6 +17,7 @@ const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
   const processVoiceMessage = async (audioBlob: Blob) => {
     try {
       setIsProcessing(true);
+      let localConversationHistory = [...conversationHistory];
 
       // Step 1: Transcription
       const formData = new FormData();
@@ -65,11 +66,10 @@ const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
       }
 
       // Update conversation history with user's message
-      setConversationHistory((prev) => [
-        ...prev,
-        { role: "user", content: userMessage },
-      ]);
+      localConversationHistory.push({ role: "user", content: userMessage });
+      setConversationHistory(localConversationHistory); // Asynchronous React update
       setFinalTranscript((prev) => `${prev}\nYou: ${userMessage}`);
+
 
       // Step 2: ChatGPT interaction
       const chatGPTResponse = await fetch("http://localhost:8080/chatgpt", {
@@ -83,23 +83,10 @@ const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
       const aiMessage = chatGPTData.response;
 
       // Update conversation history with AI's response
-      setConversationHistory((prev) => [
-        ...prev,
-        { role: "assistant", content: aiMessage },
-      ]);
+      localConversationHistory.push({ role: "assistant", content: aiMessage });
+      setConversationHistory(localConversationHistory); // Asynchronous React update
       setFinalTranscript((prev) => `${prev}\nAI: ${aiMessage}`);
 
-      // Check for session end signal
-      if (
-        aiMessage.includes(
-          "I don't have any further questions. Thank you so much for taking the time to answer these questions. I'll relay your information to your primary care physician and they'll take it from there."
-        )
-      ) {
-        console.log("Session end signal received.");
-        onSessionEnd(); // Trigger session end callback
-        // store the transcript to the db here
-        return;
-      }
 
       // Step 3: TTS
       const ttsResponse = await fetch("http://localhost:8080/tts", {
@@ -115,8 +102,35 @@ const useVoiceAssistant = ({ onSessionEnd }: { onSessionEnd: () => void }) => {
       // Play the TTS audio
       if (audioRef.current) {
         audioRef.current.src = ttsURL;
-        audioRef.current.play();
+      
+        // Wait for the TTS playback to finish
+        await new Promise<void>((resolve) => {
+          const audioElement = audioRef.current; // Save reference to ensure it's non-null
+          if (!audioElement) return resolve(); // Safeguard against any race condition
+      
+          audioElement.onended = () => {
+            audioElement.onended = null; // Clean up to prevent memory leaks
+            resolve();
+          };
+          audioElement.play().catch((error) => {
+            console.error("Error playing audio:", error);
+            resolve(); // Resolve even if playback fails
+          });
+        });
       }
+      
+      // Check for session end signal
+      if (
+        aiMessage.includes(
+          "I don't have any further questions. Thank you so much for taking the time to answer these questions. I'll relay your information to your primary care physician and they'll take it from there."
+        )
+      ) {
+        console.log("Session end signal received.");
+        onSessionEnd(localConversationHistory); // Trigger session end callback
+        // store the transcript to the db here
+        return;
+      }
+
     } catch (error) {
       console.error("Error in voice assistant:", error);
     } finally {

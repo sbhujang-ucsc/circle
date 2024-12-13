@@ -5,6 +5,7 @@ const transcribeRoutes = require("./routes/transcribe");
 const chatgptRoutes = require("./routes/chatgpt");
 const ttsRoutes = require("./routes/tts");
 const getTranscriptSummaryRoute = require("./routes/getTranscriptSummary");
+const getTranscriptAnalysisRoute = require("./routes/getTranscriptAnalysis");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -18,7 +19,9 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use("/transcribe", transcribeRoutes);
 app.use("/chatgpt", chatgptRoutes);
 app.use("/tts", ttsRoutes);
-app.use("/getTranscriptSummary", getTranscriptSummaryRoute); // Add new route
+app.use("/getTranscriptSummary", getTranscriptSummaryRoute);
+app.use("/getTranscriptAnalysis", getTranscriptAnalysisRoute);
+
 
 // Start the server
 app.listen(PORT, () => {

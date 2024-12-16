@@ -1,231 +1,273 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { extractTextFromPDF } from "@/lib/pdfUtils";
-import ChatbotModal from "./chatbot"; // Import ChatbotModal
+import ChatbotModal from "./chatbot";
 
 interface SummaryProps {
-  patientUUID: string | null;
-  apptId: string | null;
+  apptId: string | null; // Appointment ID passed as a prop
 }
 
-const Summary = ({ patientUUID, apptId }: SummaryProps) => {
+const Summary = ({ apptId }: SummaryProps) => {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [patientInfo, setPatientInfo] = useState<any>(null);
   const [appointmentData, setAppointmentData] = useState<any>(null);
-  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiWarnings, setAiWarnings] = useState<string | null>(null); // New state for AI-generated warnings
+  const [loading, setLoading] = useState(true);
 
-  const toggleChatbot = () => {
-    setIsChatbotOpen(!isChatbotOpen);
-  };
+  const toggleChatbot = () => setIsChatbotOpen(!isChatbotOpen);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  /**
-   * Fetch patient data from Supabase. If `basic_data` is null,
-   * extract data from EHR, process with API, and update the database.
-   */
-  const fetchPatientData = async () => {
-    if (!patientUUID) return;
-
-    try {
-      // Fetch patient details
-      const { data: patient, error: patientError } = await supabase
-        .from("patients")
-        .select("first_name, last_name, basic_data")
-        .eq("user_id", patientUUID)
-        .single();
-
-      if (patientError)
-        throw new Error(`Patient fetch error: ${patientError.message}`);
-
-      if (!patient.basic_data) {
-        // Parse EHR and process via API
-        const ehrText = await extractTextFromPDF("/ehr.pdf"); // Replace with dynamic EHR location
-        const response = await fetch("/api/extract-patient-data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ parsedText: ehrText }),
-        });
-
-        if (!response.ok) throw new Error("Failed to process EHR text");
-
-        const { data: processedData } = await response.json();
-
-        // Update Supabase with processed data
-        const { error: updateError } = await supabase
-          .from("patients")
-          .update({ basic_data: processedData })
-          .eq("user_id", patientUUID);
-
-        if (updateError)
-          throw new Error(
-            `Failed to update patient data: ${updateError.message}`
-          );
-
-        patient.basic_data = processedData; // Use updated data
-      }
-
-      setPatientInfo(patient);
-    } catch (error: any) {
-      console.error("Error fetching patient data:", error.message);
-    }
-  };
-
-  /**
-   * Fetch appointment data from Supabase.
-   */
-  const fetchAppointmentData = async () => {
+  const fetchAppointmentAndSummary = async () => {
     if (!apptId) return;
 
     try {
       const { data: appointment, error: appointmentError } = await supabase
         .from("appointments")
-        .select("datetime, transcript")
+        .select("datetime, transcript, patient")
         .eq("appointment_id", apptId)
         .single();
-
-      if (appointmentError)
-        throw new Error(`Appointment fetch error: ${appointmentError.message}`);
-
+      if (appointmentError) throw new Error(appointmentError.message);
       setAppointmentData(appointment);
 
-      // Extract symptoms from the transcript
-      const extractedSymptoms = appointment?.transcript?.symptoms || ["N/A"];
-      setSymptoms(extractedSymptoms);
+      const { data: patient, error: patientError } = await supabase
+        .from("patients")
+        .select("first_name, last_name, basic_data")
+        .eq("user_id", appointment.patient)
+        .single();
+      if (patientError) throw new Error(patientError.message);
+      setPatientInfo(patient);
+
+      console.log(`Appt: ${appointment.patient}`);
+      // Fetch AI Warnings
+      const warningsResponse = await fetch("http://localhost:8080/getTranscriptAnalysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appointment_id: apptId,
+          transcript: appointment.transcript,
+          patient_id: appointment.patient,
+        }),
+      });
+      if (!warningsResponse.ok) throw new Error(await warningsResponse.text());
+      const { analysis } = await warningsResponse.json();
+      setAiWarnings(analysis);
+
+      const response = await fetch("http://localhost:8080/getTranscriptSummary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointment_id: apptId }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const { summary } = await response.json();
+      setAiSummary(summary);
     } catch (error: any) {
-      console.error("Error fetching appointment data:", error.message);
+      console.error("Error fetching data:", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchPatientData();
-      await fetchAppointmentData();
+    fetchAppointmentAndSummary();
+  }, [apptId]);
+
+  const formatSummary = (summary: string) => {
+    console.log(typeof(summary))
+    if (typeof summary == "object") {
+      console.log(summary);
+      summary = summary.value;
+    }
+    const lines = summary.split("\n").filter((line) => line.trim() !== "");
+    const formattedSummary: JSX.Element[] = [];
+  
+    let currentList: JSX.Element[] = [];
+    let currentNestedList: JSX.Element[] = [];
+    let inList = false;
+    let inNestedList = false;
+  
+    const pushCurrentLists = () => {
+      if (inNestedList) {
+        currentList.push(
+          <ul key={`nested-${Math.random()}`} className="list-disc ml-8 mb-2 text-black">
+            {currentNestedList}
+          </ul>
+        );
+        currentNestedList = [];
+        inNestedList = false;
+      }
+  
+      if (inList) {
+        formattedSummary.push(
+          <ul key={`list-${Math.random()}`} className="list-disc ml-6 mb-4 text-black">
+            {currentList}
+          </ul>
+        );
+        currentList = [];
+        inList = false;
+      }
     };
-    loadData();
-  }, [patientUUID, apptId]);
+  
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+  
+      // Check for headers
+      if (trimmedLine.startsWith("# ")) {
+        // Close any open lists before starting a header
+        pushCurrentLists();
+        formattedSummary.push(
+          <h3
+            key={`header-${index}`}
+            className="text-xl font-bold mt-4 mb-2 text-black"
+          >
+            {trimmedLine.replace("# ", "")}
+          </h3>
+        );
+        return;
+      }
+  
+      // Identify if this is a bullet line
+      const leadingSpacesMatch = line.match(/^(\s*)- /);
+      if (leadingSpacesMatch) {
+        const leadingSpaces = leadingSpacesMatch[1].length;
+        const isNested = leadingSpaces >= 2; // Two or more spaces indicates a nested bullet
+  
+        // Extract formatting (bold, italic) if present
+        let content = trimmedLine.replace(/^- /, "");
+        const boldMatch = content.match(/\*\*(.*?)\*\*/);
+        const italicMatch = content.match(/\*(.*?)\*/);
+  
+        const boldText = boldMatch ? boldMatch[1] : "";
+        const italicText = italicMatch ? italicMatch[1] : "";
+  
+        content = content.replace(/\*\*(.*?)\*\*/, "").replace(/\*(.*?)\*/, "").trim();
+  
+        // Remove extra colon duplication
+        const finalText = italicText
+          ? content.startsWith(":")
+            ? content // Preserve existing colon
+            : `: ${content}` // Add colon if missing
+          : content;
+  
+        // If this is a top-level bullet
+        if (!isNested) {
+          // If we were in a nested list, close it first
+          if (inNestedList) {
+            currentList.push(
+              <ul key={`nested-${index}`} className="list-disc ml-8 mb-2 text-black">
+                {currentNestedList}
+              </ul>
+            );
+            currentNestedList = [];
+            inNestedList = false;
+          }
+  
+          inList = true;
+          currentList.push(
+            <li key={`list-item-${index}`} className="text-black">
+              {boldText && <span className="font-bold">{boldText}</span>}
+              {boldText && italicText ? " " : ""}
+              {italicText && <span className="italic">{italicText}</span>}
+              {italicText && finalText ? " " : ""}
+              {finalText}
+            </li>
+          );
+        } else {
+          // Nested bullet
+          inList = true; // Ensure parent list is open
+          inNestedList = true;
+          currentNestedList.push(
+            <li key={`nested-list-item-${index}`} className="text-black">
+              {boldText && <span className="font-bold">{boldText}</span>}
+              {boldText && italicText ? " " : ""}
+              {italicText && <span className="italic">{italicText}</span>}
+              {italicText && finalText ? " " : ""}
+              {finalText}
+            </li>
+          );
+        }
+      } else {
+        // Line does not start with "#" or "-", so it's likely text not in a list
+        pushCurrentLists();
+        formattedSummary.push(
+          <p key={`paragraph-${index}`} className="text-black mb-2">
+            {trimmedLine}
+          </p>
+        );
+      }
+    });
+  
+    // Close any remaining open lists
+    pushCurrentLists();
+  
+    return <div>{formattedSummary}</div>;
+  };
+  
+
+  if (loading) return <div className="text-center text-lg mt-10">Loading...</div>;
 
   if (!patientInfo || !appointmentData) {
-    return <div className="text-center text-lg mt-10">Loading...</div>;
+    return <div className="text-center text-lg mt-10">No data available.</div>;
   }
 
   return (
-    <div>
-      <div className="flex space-x-8 w-[80%] mx-auto mt-8 items-stretch">
-        {/* Patient Details Card */}
-        <div
-          className="bg-[#B8D8ED] text-gray-800 rounded-2xl shadow-lg shadow-gray-400
-         p-6 w-[30%] flex flex-col min-h-[80vh]"
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <div
+        className={`fixed z-50 top-0 left-0 h-screen bg-[#356BBB] text-white shadow-lg transition-transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } w-64`}
+      >
+        <button
+          className="absolute top-4 right-4 text-white text-2xl"
+          onClick={toggleSidebar}
         >
-          <h3 className="text-4xl text-[#174a95] font-bold mt-4 text-center">
-            {patientInfo.first_name}{" "}
-            {patientInfo.last_name || "Unknown Patient"}
-          </h3>
-
-          <table className="w-full text-left text-gray-800 text-lg my-8">
-            <tbody>
-              <tr>
-                <th className="py-2 pr-4 font-medium text-right border-r border-r-2 border-gray-700">
-                  Age
-                </th>
-                <td className="py-2 pl-10">
-                  {patientInfo.basic_data.age || "N/A"}
-                </td>
-              </tr>
-              <tr>
-                <th className="py-2 pr-4 font-medium text-right border-r border-r-2 border-gray-700">
-                  Gender
-                </th>
-                <td className="py-2 pl-10">
-                  {patientInfo.basic_data.gender || "N/A"}
-                </td>
-              </tr>
-              <tr>
-                <th className="py-2 pr-4 font-medium text-right border-r border-r-2 border-gray-700">
-                  Weight
-                </th>
-                <td className="py-2 pl-10">
-                  {patientInfo.basic_data.weight || "N/A"}kg
-                </td>
-              </tr>
-              <tr>
-                <th className="py-2 pr-4 font-medium text-right border-r border-r-2 border-gray-700">
-                  Height
-                </th>
-                <td className="py-2 pl-10">
-                  {patientInfo.basic_data.height || "N/A"}
-                </td>
-              </tr>
-              <tr>
-                <th className="py-2 pr-4 font-medium text-right border-r border-r-2 border-gray-700">
-                  Allergies
-                </th>
-                <td className="py-2 pl-10">
-                  {patientInfo.basic_data.allergies || "None"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <p className="flex flex-col text-2xl text-gray-800 font-semibold my-6">
-            <span>Appointment:</span>
-            <span className="block">
-              {new Date(appointmentData.datetime).toLocaleString()}
-            </span>
-          </p>
-          <div className="flex flex-col items-start">
-            <p className="text-2xl font-semibold">Symptoms:</p>
-            <ul className="ml-8 list-disc text-2xl text-gray-800">
-              {symptoms.map((symptom, index) => (
-                <li key={index}>{symptom}</li>
-              ))}
-            </ul>
-          </div>
+          ✕
+        </button>
+        <div className="p-6">
+          <h3 className="text-xl font-bold mb-4">{`${patientInfo.first_name} ${patientInfo.last_name}`}</h3>
+          <p className="text-black">Age: {patientInfo.basic_data?.age || "N/A"}</p>
+          <p className="text-black">Gender: {patientInfo.basic_data?.gender || "N/A"}</p>
         </div>
-
-        {/* Right Panels */}
-        <div className="flex flex-col gap-6 w-[60%] min-h-[80vh] text-xl text-gray-800">
+      </div>
+      {/* Main Content */}
+      <div className="flex-grow flex flex-col gap-6 px-6 pt-6 overflow-y-auto">
+        <button
+          className="bg-[#356BBB] text-white py-2 px-4 rounded-lg self-start"
+          onClick={toggleSidebar}
+        >
+          View Patient Info
+        </button>
+        <div className="grid grid-cols-3 gap-6">
           {/* AI Summary */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg shadow-gray-400 flex-grow">
-            <h3 className="text-2xl text-[#174a95] font-bold mb-4">
-              AI Summary
-            </h3>
-            <p>
-              The patient has these symptoms, and these relevant underlying
-              conditions . . . (Generated using LLM in the future)
-            </p>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-2xl font-bold mb-4 text-black">Summary</h3>
+            {aiSummary ? (
+              <div>{formatSummary(aiSummary)}</div>
+            ) : (
+              <p className="text-gray-500">Loading AI summary...</p>
+            )}
           </div>
-
           {/* Inconsistencies/Warnings */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg shadow-gray-400 flex-grow">
-            <h3 className="text-2xl text-[#174a95] font-bold mb-4">
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-2xl font-bold mb-4 text-black">
               Inconsistencies / Warnings
             </h3>
-            <ul className="list-disc pl-6">
-              <li>
-                Has this allergy, which could affect this medication . . .
-              </li>
-              <li>
-                Currently taking these medications, which are correlated with
-                this symptom . . .
-              </li>
-            </ul>
+            {aiWarnings ? (
+              <div>{formatSummary(aiWarnings)}</div>
+            ) : (
+              <p className="text-gray-500">Loading AI warnings...</p>
+            )}
           </div>
-
           {/* Suggestions */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg shadow-gray-400 flex-grow">
-            <h3 className="text-2xl text-[#174a95] font-bold mb-4">
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-2xl font-bold mb-4 text-black">
               Suggested Ideas
             </h3>
-            <ul className="list-disc pl-6">
-              <li>Medication list here . . .</li>
-              <li>Talk about this to clarify . . .</li>
-            </ul>
           </div>
         </div>
-        {/* Chatbot Modal */}
-        {isChatbotOpen && <ChatbotModal onClose={toggleChatbot} />}
       </div>
-
-      {/* Chat with AI Button */}
+      {/* Chatbot */}
       <div className="fixed bottom-8 right-8">
         <button
           onClick={toggleChatbot}
@@ -235,8 +277,10 @@ const Summary = ({ patientUUID, apptId }: SummaryProps) => {
           <span>Chat with AI</span>
         </button>
       </div>
+      {isChatbotOpen && <ChatbotModal onClose={toggleChatbot} />}
     </div>
   );
 };
+
 
 export default Summary;

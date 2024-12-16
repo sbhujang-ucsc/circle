@@ -5,7 +5,15 @@ import { AuthContext } from "../../providers/AuthProvider";
 import Sidebar from "@/components/patient/Sidebar";
 
 // DonePage.tsx
-const DonePage = ({ handleLogout, handlePageChange }) => {
+const DonePage = ({
+  handleLogout,
+  handlePageChange,
+  appointmentID,
+}: {
+  handleLogout: () => void;
+  handlePageChange: (page: number) => void;
+  appointmentID: string | null;
+}) => {
   const { user } = useContext(AuthContext);
   const [appointmentDetails, setAppointmentDetails] = useState<{
     location: string;

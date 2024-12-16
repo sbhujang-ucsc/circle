@@ -122,7 +122,7 @@ const DoctorLanding = () => {
                           `/appointment?app=${appointment.appointment_id}`
                         )
                       }
-                      className="bg-[#9baee5] text-white py-2 px-5 rounded-lg hover:bg-[#90a3da] font-bold text-lg"
+                      className="bg-[#4b5ca6] text-white py-2 px-5 rounded-lg hover:bg-[#3e4b8f] font-bold text-lg"
                     >
                       ➔
                     </button>

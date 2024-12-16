@@ -14,38 +14,35 @@ const CallPage = ({
   handlePageChange: (page: number) => void;
   appointmentID: string | null;
 }) => {
-  const textToJSON = (transcript: string) => {
-    const lines = transcript.split("\n"); // Split the text into lines
-    const conversation: Array<{ speaker: string; text: string }> = []; // Typed array for the conversation
+  // const textToJSON = (transcript: string) => {
+  //   const lines = transcript.split("\n"); // Split the text into lines
+  //   const conversation: Array<{ speaker: string; text: string }> = []; // Typed array for the conversation
 
-    lines.forEach((line) => {
-      const match = line.match(/^(You|AI):\s(.+)$/); // Match speaker and text
-      if (match) {
-        const [_, speaker, text] = match; // Extract speaker and text
-        conversation.push({ speaker, text });
-      }
-    });
+  //   lines.forEach((line) => {
+  //     const match = line.match(/^(You|AI):\s(.+)$/); // Match speaker and text
+  //     if (match) {
+  //       const [_, speaker, text] = match; // Extract speaker and text
+  //       conversation.push({ speaker, text });
+  //     }
+  //   });
 
-    return conversation;
-  };
+  //   return conversation;
+  // };
   const {
     isProcessing,
     conversationHistory,
-    finalTranscript,
     processVoiceMessage,
     audioRef,
   } = useVoiceAssistant({
-    onSessionEnd: async () => {
+    onSessionEnd: async (localConversationHistory) => {
       try {
-        if (appointmentID && finalTranscript) {
-          // Parse finalTranscript into JSON
-          const transcriptJSON = textToJSON(finalTranscript);
+        if (appointmentID && localConversationHistory.length > 0) {
           // Update the transcript column in the appointments table
           const { error } = await supabase
             .from("appointments")
-            .update({ transcript: transcriptJSON })
+            .update({ transcript: localConversationHistory })
             .eq("appointment_id", appointmentID);
-
+    
           if (error) {
             console.error("Error updating transcript in Supabase:", error);
           } else {
@@ -53,50 +50,71 @@ const CallPage = ({
           }
         }
       } catch (error) {
-        console.error("Error parsing or saving transcript:", error);
+        console.error("Error saving transcript:", error);
       }
-
-      console.log("Session ended. Final Transcript:", finalTranscript);
+    
+      console.log("Session ended. Transcript:", localConversationHistory);
       handlePageChange(4); // Navigate to DonePage
-    },
+    }    
   });
 
   return (
-    <div className="bg-[#dde3f2] text-black min-h-screen flex">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="bg-[#dde3f2] text-black min-h-screen flex flex-col">
+      {/* Top bar */}
+      <div className="bg-[#356BBB] flex justify-between items-center border-b-4 border-b-solid border-b-[#edf9fe] p-4 text-[30px] font-bold font-exo">
+        <button
+          onClick={() => handlePageChange(1)}
+          className="bg-[#356BBB] text-white border-2 border-white p-2 px-4 text-[30px] flex items-center rounded-2xl hover:bg-[#174a95]"
+        >
+          Back
+        </button>
+        <button
+          onClick={handleLogout}
+          className="bg-[#356BBB] text-white border-2 border-white p-2 px-4 text-[30px] rounded-2xl hover:bg-[#174a95]"
+        >
+          Log Out
+        </button>
+      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 bg-white rounded-2xl shadow-xl m-6 p-8">
-        <div className="flex justify-between items-center border-b-4 border-[#edf9fe] pb-4 mb-6">
-          <button
-            onClick={() => handlePageChange(1)} // again skipping questionaire page because redundant
-            className="bg-[#356BBB] text-white p-4 px-6 rounded-lg hover:bg-[#174a95]"
-          >
-            Back
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="bg-[#356BBB] text-white p-4 px-6 rounded-lg hover:bg-[#174a95]"
-          >
-            Log Out
-          </button>
+      {/* Content */}
+      <div className="flex-grow flex gap-8 px-10 py-10 mb-10">
+        {/* Sidebar */}
+        <div className="flex-1 bg-[#B8D8ED] rounded-2xl shadow-xl shadow-gray-500 px-12 py-10 max-w-[50vh]">
+          <div>
+            <div className="h-0.5 bg-gray-400 my-4"></div>
+            <div className="p-4 space-y-6">
+              <p className="font-bold text-[#356BBB] text-2xl">STEP 1</p>
+              <p className="text-[#356BBB] text-2xl font-semibold">
+                Call our smart AI assistant
+              </p>
+            </div>
+            <div className="h-0.5 bg-gray-400 my-4"></div>
+            <div className="p-4 space-y-6">
+              <p className="font-bold text-gray-600 text-2xl">STEP 2</p>
+              <p className="text-gray-600 text-2xl font-semibold">
+                Get ready for your appointment!
+              </p>
+            </div>
+            <div className="h-0.5 bg-gray-400 my-4"></div>
+          </div>
         </div>
 
-        <h2 className="text-2xl font-semibold mb-4">
-          Speak with our smart assistant
-        </h2>
-        <AudioRecorder
-          onRecordingComplete={processVoiceMessage}
-          disabled={isProcessing}
-        />
+        {/* Main Content */}
+        <div className="flex-1 rounded-2xl shadow-xl shadow-gray-500 px-12 py-10">
+          <h2 className="text-3xl font-semibold mb-4">
+            Speak with our smart assistant
+          </h2>
+          <AudioRecorder
+            onRecordingComplete={processVoiceMessage}
+            disabled={isProcessing}
+          />
 
-        <div className="mt-8">
-          <ConversationHistory history={conversationHistory} />
+          <div className="mt-8">
+            <ConversationHistory history={conversationHistory} />
+          </div>
+
+          <audio ref={audioRef} style={{ display: "none" }} />
         </div>
-
-        <audio ref={audioRef} style={{ display: "none" }} />
       </div>
     </div>
   );
